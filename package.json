@@ -1,0 +1,33 @@
+{
+  "name": "shopmanagementsystem",
+  "version": "1.0.0",
+  "description": "This is a system that is aimed to help the shopkeeper manage their shop operations easily tracking their inventry and allows shopkeepers be able to update it and  view producst in the inventory",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jjibrah/ShopManagementSystem.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jjibrah/ShopManagementSystem/issues"
+  },
+  "homepage": "https://github.com/jjibrah/ShopManagementSystem#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.86.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}

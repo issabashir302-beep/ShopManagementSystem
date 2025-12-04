@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Receipt</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .receipt-container {
+      background: #ffffff;
+      padding: 20px;
+      width: 350px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+
+    .receipt-header {
+      text-align: center;
+      margin-bottom: 15px;
+      border-bottom: 1px dashed #ccc;
+      padding-bottom: 10px;
+    }
+
+    .receipt-header h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .receipt-header p {
+      margin: 3px 0;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .receipt-info {
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .receipt-info div {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .items-table th,
+    .items-table td {
+      padding: 6px 0;
+    }
+
+    .items-table th {
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .items-table td:nth-child(2),
+    .items-table td:nth-child(3) {
+      text-align: right;
+    }
+
+    .receipt-totals {
+      font-size: 12px;
+      margin-top: 15px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+
+    .receipt-totals div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .receipt-footer {
+      text-align: center;
+      font-size: 11px;
+      margin-top: 15px;
+      border-top: 1px dashed #ccc;
+      padding-top: 8px;
+      color: #555;
+    }
+
+    #print-btn {
+      margin-top: 15px;
+      width: 100%;
+      padding: 8px 0;
+      border: none;
+      border-radius: 4px;
+      background: #111827;
+      color: #ffffff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #print-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Hide the print button when printing */
+    @media print {
+      #print-btn {
+        display: none;
+      }
+
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+
+      .receipt-container {
+        box-shadow: none;
+        border-radius: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt-container">
+    <div class="receipt-header">
+      <h1>My Shop</h1>
+      <p>123 Market Street</p>
+      <p>Phone: +123 456 789</p>
+    </div>
+
+    <div class="receipt-info">
+      <div>
+        <span>Date:</span>
+        <span id="receipt-date"></span>
+      </div>
+      <div>
+        <span>Receipt #:</span>
+        <span id="receipt-number"></span>
+      </div>
+      <div>
+        <span>Cashier:</span>
+        <span id="cashier-name"></span>
+      </div>
+    </div>
+
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="items-body">
+        <!-- JS will inject rows here -->
+      </tbody>
+    </table>
+
+    <div class="receipt-totals">
+      <div>
+        <strong>Subtotal:</strong>
+        <span id="subtotal"></span>
+      </div>
+      <div>
+        <strong>Tax (16%):</strong>
+        <span id="tax"></span>
+      </div>
+      <div>
+        <strong>Grand Total:</strong>
+        <span id="grand-total"></span>
+      </div>
+      <div>
+        <strong>Paid:</strong>
+        <span id="amount-paid"></span>
+      </div>
+      <div>
+        <strong>Change:</strong>
+        <span id="change"></span>
+      </div>
+    </div>
+
+    <div class="receipt-footer">
+      <p>Thank you for shopping with us!</p>
+      <p>This system is made by AmanahDevelopers</p>
+      <p>contacts: amanahmvp@gmail.com</p>
+    </div>
+
+    <button id="print-btn" onclick="window.print()">Print Receipt</button>
+  </div>
+
+  <script>
+    // --- Mock data (you can replace this with real data) ---
+    const receiptData = {
+      number: "RCP-00123",
+      cashier: "John Doe",
+      date: new Date(),
+      items: [
+        { name: "Bread", price: 1.20, quantity: 2 },
+        { name: "Milk 1L", price: 0.85, quantity: 1 },
+        { name: "Eggs (Tray)", price: 2.50, quantity: 1 },
+        { name: "Sugar 1kg", price: 1.10, quantity: 3 }
+      ],
+      amountPaid: 15.00,
+      taxRate: 0.16
+    };
+
+    // Format number as currency (KSH example)
+    function formatCurrency(value) {
+      return "KSH " + value.toFixed(2);
+    }
+
+    function loadReceipt(data) {
+      // Basic info
+      document.getElementById("receipt-number").textContent = data.number;
+      document.getElementById("cashier-name").textContent = data.cashier;
+      document.getElementById("receipt-date").textContent =
+        data.date.toLocaleString();
+
+      const itemsBody = document.getElementById("items-body");
+      itemsBody.innerHTML = "";
+
+      let subtotal = 0;
+
+      data.items.forEach(item => {
+        const row = document.createElement("tr");
+
+        const itemNameCell = document.createElement("td");
+        itemNameCell.textContent = item.name;
+
+        const qtyCell = document.createElement("td");
+        qtyCell.textContent = item.quantity;
+
+        const totalPrice = item.price * item.quantity;
+        subtotal += totalPrice;
+
+        const totalCell = document.createElement("td");
+        totalCell.textContent = formatCurrency(totalPrice);
+
+        row.appendChild(itemNameCell);
+        row.appendChild(qtyCell);
+        row.appendChild(totalCell);
+
+        itemsBody.appendChild(row);
+      });
+
+      const tax = subtotal * data.taxRate;
+      const grandTotal = subtotal + tax;
+      const change = data.amountPaid - grandTotal;
+
+      document.getElementById("subtotal").textContent = formatCurrency(subtotal);
+      document.getElementById("tax").textContent = formatCurrency(tax);
+      document.getElementById("grand-total").textContent = formatCurrency(grandTotal);
+      document.getElementById("amount-paid").textContent = formatCurrency(data.amountPaid);
+      document.getElementById("change").textContent = formatCurrency(change);
+    }
+
+    // Load mock receipt on page load
+    loadReceipt(receiptData);
+  </script>
+</body>
+</html>

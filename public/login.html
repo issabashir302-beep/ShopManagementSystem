@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Secure Access</title>
+
+  <!-- Google Font -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Font Awesome Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+
+  <!-- Your main stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+  <!-- Background animation -->
+  <div class="background-animation">
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+  </div>
+
+  <!-- Theme Toggle -->
+  <div class="theme-toggle-wrapper" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <div class="theme-toggle-inner">
+        <div class="sun-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" fill="currentColor"/>
+            <path d="M12 1V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 21V23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4.22 4.22L5.64 5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18.36 18.36L19.78 19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M1 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M21 12H23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4.22 19.78L5.64 18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="moon-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M21 12.79C20.8427 14.4922 20.2039 16.1144 19.1582 17.4668C18.1126 18.8192 16.7035 19.8458 15.0957 20.4265C13.4879 21.0073 11.748 21.1181 10.0795 20.7461C8.41102 20.3741 6.88299 19.5345 5.67422 18.3258C4.46545 17.117 3.62594 15.589 3.2539 13.9205C2.88186 12.252 2.99274 10.5121 3.57348 8.9043C4.15422 7.29651 5.18085 5.88737 6.53323 4.84175C7.88561 3.79614 9.50779 3.15731 11.21 3C10.2134 4.34827 9.73385 6.00945 9.85856 7.68141C9.98326 9.35338 10.7039 10.9251 11.8894 12.1106C13.0749 13.2961 14.6466 14.0167 16.3186 14.1414C17.9906 14.2662 19.6517 13.7866 21 12.79Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="theme-toggle-thumb"></div>
+      </div>
+      <span class="theme-toggle-label">Theme</span>
+    </button>
+  </div>
+
+  <div class="auth-container">
+    <!-- Apple-style header -->
+    <div class="auth-header">
+      <div class="apple-logo">
+        <i class="fas fa-lock"></i>
+      </div>
+      <h1 class="auth-title">Sign In</h1>
+      <p class="auth-subtitle">Access your secure account</p>
+    </div>
+
+    <!-- Login form -->
+    <form id="login-form" class="auth-form">
+      <div class="form-group">
+        <label for="login_email">Email Address</label>
+        <div class="input-group">
+          <i class="fas fa-envelope input-icon"></i>
+          <input
+            type="email"
+            id="login_email"
+            placeholder="name@example.com"
+            required
+            class="auth-input"
+            autocomplete="email"
+          />
+          <div class="input-focus-line"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="login_password">Password</label>
+        <div class="input-group">
+          <i class="fas fa-lock input-icon"></i>
+          <input
+            type="password"
+            id="login_password"
+            placeholder="Enter your password"
+            required
+            class="auth-input"
+            autocomplete="current-password"
+          />
+          <div class="input-focus-line"></div>
+          <button type="button" class="password-toggle" id="togglePassword">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="auth-btn" id="submitButton">
+        <span class="btn-text">Sign In</span>
+        <div class="btn-loader">
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+        </div>
+      </button>
+
+      <p id="login-error" class="error-message"></p>
+    </form>
+
+    <div class="auth-link">
+      Don't have an account?
+      <a href="signup.html" class="login-text">Create one</a>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/auth.js"></script>
+  
+  <!-- Updated animations script -->
+  <script>
+    // Password toggle functionality
+    document.getElementById('togglePassword').addEventListener('click', function() {
+      const passwordInput = document.getElementById('login_password');
+      const icon = this.querySelector('i');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+
+    // Form submission with loading state
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitButton');
+      const errorMsg = document.getElementById('login-error');
+      
+      // Show loading state
+      submitBtn.classList.add('loading');
+      errorMsg.classList.remove('show');
+      
+      // Get form values
+      const email = document.getElementById('login_email').value;
+      const password = document.getElementById('login_password').value;
+      
+      // Simulate API call (replace with actual auth)
+      setTimeout(() => {
+        // Check credentials (dummy validation)
+        if (email && password.length >= 6) {
+          // Success - redirect to dashboard
+          window.location.href = 'admin.html';
+        } else {
+          // Show error
+          errorMsg.textContent = 'Invalid email or password. Please try again.';
+          errorMsg.classList.add('show');
+          submitBtn.classList.remove('loading');
+        }
+      }, 1500);
+    });
+
+    // Add input validation styling
+    const inputs = document.querySelectorAll('.auth-input');
+    inputs.forEach(input => {
+      input.addEventListener('blur', function() {
+        if (this.value) {
+          if (this.checkValidity()) {
+            this.classList.add('valid');
+            this.classList.remove('invalid');
+          } else {
+            this.classList.add('invalid');
+            this.classList.remove('valid');
+          }
+        } else {
+          this.classList.remove('valid', 'invalid');
+        }
+      });
+    });
+
+    // Press Enter to submit
+    document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !document.querySelector('.auth-btn.loading')) {
+        document.getElementById('login-form').dispatchEvent(new Event('submit'));
+      }
+    });
+  </script>
+</body>
+
+</html>

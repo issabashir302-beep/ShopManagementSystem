@@ -1,0 +1,5 @@
+# Environment and config files
+.env
+assets/js/config.js
+node_modules/
+dist/
