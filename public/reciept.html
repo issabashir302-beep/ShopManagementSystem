@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Receipt</title>
@@ -18,7 +19,7 @@
       background: #ffffff;
       padding: 20px;
       width: 350px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
     }
 
@@ -129,6 +130,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="receipt-container">
     <div class="receipt-header">
@@ -198,32 +200,38 @@
   </div>
 
   <script>
-    // --- Mock data (you can replace this with real data) ---
-    const receiptData = {
-      number: "RCP-00123",
-      cashier: "John Doe",
-      date: new Date(),
-      items: [
-        { name: "Bread", price: 1.20, quantity: 2 },
-        { name: "Milk 1L", price: 0.85, quantity: 1 },
-        { name: "Eggs (Tray)", price: 2.50, quantity: 1 },
-        { name: "Sugar 1kg", price: 1.10, quantity: 3 }
-      ],
-      amountPaid: 15.00,
-      taxRate: 0.16
-    };
-
     // Format number as currency (KSH example)
     function formatCurrency(value) {
-      return "KSH " + value.toFixed(2);
+      return "KSH " + parseFloat(value).toFixed(2);
     }
 
-    function loadReceipt(data) {
+    function loadReceipt() {
+      // Try to get receipt data from localStorage
+      const storedReceipt = localStorage.getItem('lastReceipt');
+
+      let data;
+      if (storedReceipt) {
+        data = JSON.parse(storedReceipt);
+        // Ensure date is a Date object
+        data.date = new Date(data.date);
+      } else {
+        // Fallback mock data
+        data = {
+          number: "RCP-SAMPLE",
+          cashier: "Demo User",
+          date: new Date(),
+          items: [
+            { name: "Sample Item", price: 100, quantity: 1 }
+          ],
+          amountPaid: 100,
+          taxRate: 0.16
+        };
+      }
+
       // Basic info
       document.getElementById("receipt-number").textContent = data.number;
-      document.getElementById("cashier-name").textContent = data.cashier;
-      document.getElementById("receipt-date").textContent =
-        data.date.toLocaleString();
+      document.getElementById("cashier-name").textContent = data.cashier || "Shopkeeper";
+      document.getElementById("receipt-date").textContent = new Date(data.date).toLocaleString();
 
       const itemsBody = document.getElementById("items-body");
       itemsBody.innerHTML = "";
@@ -252,19 +260,27 @@
         itemsBody.appendChild(row);
       });
 
-      const tax = subtotal * data.taxRate;
-      const grandTotal = subtotal + tax;
-      const change = data.amountPaid - grandTotal;
+      // If totals are provided in data, use them, otherwise calculate
+      const tax = data.tax !== undefined ? data.tax : (subtotal * (data.taxRate || 0.16));
+      const grandTotal = data.total !== undefined ? data.total : (subtotal + tax);
+      const amountPaid = data.amountPaid !== undefined ? data.amountPaid : grandTotal;
+      const change = amountPaid - grandTotal;
 
       document.getElementById("subtotal").textContent = formatCurrency(subtotal);
       document.getElementById("tax").textContent = formatCurrency(tax);
       document.getElementById("grand-total").textContent = formatCurrency(grandTotal);
-      document.getElementById("amount-paid").textContent = formatCurrency(data.amountPaid);
+      document.getElementById("amount-paid").textContent = formatCurrency(amountPaid);
       document.getElementById("change").textContent = formatCurrency(change);
+
+      // Auto print if requested
+      if (new URLSearchParams(window.location.search).has('print')) {
+        window.print();
+      }
     }
 
-    // Load mock receipt on page load
-    loadReceipt(receiptData);
+    // Load receipt on page load
+    document.addEventListener('DOMContentLoaded', loadReceipt);
   </script>
 </body>
+
 </html>

@@ -1,487 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Shopkeeper Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Link your existing stylesheet -->
-    <link rel="stylesheet" href="css/style.css" />
+<head>
+  <meta charset="UTF-8" />
+  <title>Shopkeeper Dashboard - Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css">
 
-    <!-- Font Awesome (if you use icons) -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-  </head>
-  <body>
-    <header class="topbar">
-      <h1>Shopkeeper Dashboard</h1>
-      <div style="display: flex; align-items: center; gap: 15px;">
-        <!-- Theme Toggle -->
-        <div class="theme-toggle-wrapper">
-          <button class="theme-toggle" aria-label="Toggle theme">
-            <div class="theme-toggle-inner">
-              <div class="sun-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" fill="currentColor"/>
-                  <path d="M12 1V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M12 21V23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M4.22 4.22L5.64 5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M18.36 18.36L19.78 19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M1 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M21 12H23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M4.22 19.78L5.64 18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </div>
-              <div class="moon-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 12.79C20.8427 14.4922 20.2039 16.1144 19.1582 17.4668C18.1126 18.8192 16.7035 19.8458 15.0957 20.4265C13.4879 21.0073 11.748 21.1181 10.0795 20.7461C8.41102 20.3741 6.88299 19.5345 5.67422 18.3258C4.46545 17.117 3.62594 15.589 3.2539 13.9205C2.88186 12.252 2.99274 10.5121 3.57348 8.9043C4.15422 7.29651 5.18085 5.88737 6.53323 4.84175C7.88561 3.79614 9.50779 3.15731 11.21 3C10.2134 4.34827 9.73385 6.00945 9.85856 7.68141C9.98326 9.35338 10.7039 10.9251 11.8894 12.1106C13.0749 13.2961 14.6466 14.0167 16.3186 14.1414C17.9906 14.2662 19.6517 13.7866 21 12.79Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div class="theme-toggle-thumb"></div>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <h1>Shopkeeper Dashboard</h1>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <!-- Theme Toggle -->
+      <div class="theme-toggle-wrapper">
+        <button class="theme-toggle" aria-label="Toggle theme">
+          <div class="theme-toggle-inner">
+            <div class="sun-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z"
+                  fill="currentColor" />
+                <path d="M12 1V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M12 21V23" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M4.22 4.22L5.64 5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M18.36 18.36L19.78 19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M1 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M21 12H23" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M4.22 19.78L5.64 18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
             </div>
-            <span class="theme-toggle-label">Theme</span>
-          </button>
-        </div>
-        <button id="logout-btn" class="action-btn">
-          <i class="fas fa-right-from-bracket"></i>
-          Logout
+            <div class="moon-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M21 12.79C20.8427 14.4922 20.2039 16.1144 19.1582 17.4668C18.1126 18.8192 16.7035 19.8458 15.0957 20.4265C13.4879 21.0073 11.748 21.1181 10.0795 20.7461C8.41102 20.3741 6.88299 19.5345 5.67422 18.3258C4.46545 17.117 3.62594 15.589 3.2539 13.9205C2.88186 12.252 2.99274 10.5121 3.57348 8.9043C4.15422 7.29651 5.18085 5.88737 6.53323 4.84175C7.88561 3.79614 9.50779 3.15731 11.21 3C10.2134 4.34827 9.73385 6.00945 9.85856 7.68141C9.98326 9.35338 10.7039 10.9251 11.8894 12.1106C13.0749 13.2961 14.6466 14.0167 16.3186 14.1414C17.9906 14.2662 19.6517 13.7866 21 12.79Z"
+                  fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+            <div class="theme-toggle-thumb"></div>
+          </div>
+          <span class="theme-toggle-label">Theme</span>
         </button>
       </div>
-    </header>
+      <button id="logoutBtn" class="action-btn">
+        <i class="fas fa-right-from-bracket"></i>
+        Logout
+      </button>
+    </div>
+  </header>
 
-    <main class="main-layout">
-      <!-- Inventory Panel -->
-      <section class="panel inventory-panel">
-        <div class="panel-header panel-header-row">
+  <main class="main-layout">
+    <!-- Inventory Panel -->
+    <section class="panel inventory-panel">
+      <div class="panel-header panel-header-row">
+        <div>
+          <h2>Inventory</h2>
+          <p>View available products and current stock. Click "Add to Cart" to start a sale.</p>
+        </div>
+        <div class="inventory-actions">
+          <div class="search-box">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" id="search_inventory" placeholder="Search by name or SKU..." />
+          </div>
+        </div>
+      </div>
+
+      <div class="inventory-table-wrapper">
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Category</th>
+              <th>Selling Price (KSH)</th>
+              <th>Stock</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTable">
+            <!-- Filled by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Shopping Cart & Sales Panel -->
+    <section class="panel cart-panel">
+      <div class="panel-header">
+        <h2>Shopping Cart</h2>
+        <p>Review items before finalizing sale. Cart will be cleared after sale.</p>
+      </div>
+
+      <div class="cart-items" id="cartItems">
+        <div class="empty-cart" id="emptyCartMessage">
+          <i class="fas fa-shopping-cart"></i>
+          <p>Your cart is empty</p>
+          <p>Add products from the inventory to start a sale</p>
+        </div>
+        <!-- Cart items will be added here -->
+      </div>
+
+      <div class="cart-summary">
+        <div class="summary-item">
+          <span class="summary-label">Items in Cart</span>
+          <span class="summary-value" id="cartItemCount">0</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Subtotal</span>
+          <span class="summary-value" id="cartSubtotal">KSH 0</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Total</span>
+          <span class="summary-value" id="cartTotal">KSH 0</span>
+        </div>
+      </div>
+
+      <div class="cart-actions">
+        <button id="clearCartBtn" class="secondary-btn" disabled>
+          <i class="fas fa-trash"></i>
+          Clear Cart
+        </button>
+        <button id="checkoutBtn" class="primary-btn" disabled>
+          <i class="fas fa-check"></i>
+          Finalize Sale
+        </button>
+        <button id="printReceiptBtn" class="secondary-btn"
+          style="grid-column: span 2; justify-content: center; margin-top: 10px;" disabled>
+          <i class="fas fa-print"></i>
+          Print Receipt
+        </button>
+      </div>
+
+      <!-- Recent Sales Section (Inside Cart Panel) -->
+      <div class="sales-section"
+        style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+        <div class="table-header">
           <div>
-            <h2>Inventory</h2>
-            <p>View available products and current stock.</p>
-          </div>
-          <div class="inventory-actions">
-            <div class="search-box">
-              <i class="fas fa-magnifying-glass"></i>
-              <input
-                type="text"
-                id="search_inventory"
-                placeholder="Search by name or SKU..."
-              />
-            </div>
-          </div>
-        </div>
-
-        <div class="inventory-table-wrapper">
-          <table class="inventory-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>SKU</th>
-                <th>Category</th>
-                <th>Selling Price (KSH)</th>
-                <th>Stock</th>
-              </tr>
-            </thead>
-            <tbody id="inventoryTable">
-              <!-- Filled by JavaScript -->
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Right side: New Sale + Recent Sales -->
-      <section class="panel sales-panel">
-        <!-- New Sale Form -->
-        <section class="panel panel-form">
-          <div class="panel-header">
-            <h2>Record New Sale</h2>
-            <p>When a customer buys a product, record it here.</p>
-          </div>
-
-          <form class="panel-form-grid" id="sale-form">
-            <div class="form-group">
-              <label for="sale_product">Product</label>
-              <select id="sale_product" required>
-                <!-- Options filled by JavaScript -->
-              </select>
-            </div>
-
-            <div class="form-group two-cols">
-              <div>
-                <label for="sale_quantity">Quantity Bought</label>
-                <input
-                  type="number"
-                  id="sale_quantity"
-                  min="1"
-                  placeholder="e.g. 2"
-                  required
-                />
-              </div>
-              <div>
-                <label for="sale_unit">Unit</label>
-                <select id="sale_unit" required>
-                  <option value="">Select unit...</option>
-                  <option value="pieces">Pieces (unit)</option>
-                  <option value="cartons">Cartons</option>
-                  <option value="bale">Bale</option>
-                  <option value="kg">Kg</option>
-                  <option value="outer">Outer</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Available Stock</label>
-              <div id="sale_stock_display" style="padding: 12px; background: rgba(241, 245, 249, 0.7); border-radius: 8px; font-weight: 500; color: #1e293b;">—</div>
-            </div>
-
-            <div class="form-group two-cols">
-              <div>
-                <label>Unit Selling Price (KSH)</label>
-                <div id="sale_price_display">—</div>
-              </div>
-              <div>
-                <label>Estimated Total (KSH)</label>
-                <div id="sale_total_display">—</div>
-              </div>
-            </div>
-
-            <button type="submit" class="primary-btn">
-              <span class="btn-text">
-                <i class="fas fa-check"></i>
-                Record Sale
-              </span>
-              <span class="btn-loader"></span>
-            </button>
-          </form>
-        </section>
-
-        <!-- Recent Sales Table -->
-        <section class="sales-table-wrapper">
-          <div class="table-header">
             <h3>Recent Sales</h3>
+            <p style="font-size: 14px; color: rgba(255,255,255,0.6); margin: 0;">All completed sales will appear here
+            </p>
           </div>
+          <button id="refreshSalesBtn" class="secondary-btn" style="padding: 8px 16px; font-size: 14px;">
+            <i class="fas fa-sync"></i>
+            Refresh
+          </button>
+        </div>
+
+        <div class="sales-table-wrapper">
           <table class="sales-table">
             <thead>
               <tr>
                 <th>Order ID</th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Unit</th>
-                <th>Selling Price (KSH)</th>
+                <th>Products</th>
+                <th>Items</th>
                 <th>Total (KSH)</th>
                 <th>Date</th>
+                <th>Time</th>
               </tr>
             </thead>
             <tbody id="salesTableBody">
-              <!-- New sales will appear here -->
+              <!-- Recent sales will appear here -->
             </tbody>
           </table>
-        </section>
-      </section>
-    </main>
+        </div>
+      </div>
+    </section>
+  </main>
 
-    <!-- Sale form and inventory are now handled by shopkeeper.js -->
-    <!-- Removed inline script to avoid conflicts with database integration -->
-    <script>
-      // Placeholder - all functionality moved to shopkeeper.js
-      // This script is kept for any fallback functionality if needed
-      console.log('Shopkeeper page loaded - functionality handled by shopkeeper.js');
-    </script>
-    <!--
-    <!-- Sale form and inventory are now handled by shopkeeper.js -->
-    <!-- Inline script commented out to avoid conflicts -->
-    <!--
-    <script>
-      // --- Simple in-memory products data (example) ---
-      const products = [
-        {
-          id: 1,
-          name: "Coca-Cola 330ml",
-          sku: "CC330-01",
-          category: "Beverages",
-          sellPrice: 50.0,
-          stock: 24,
-        },
-        {
-          id: 2,
-          name: "Gardenia Bread",
-          sku: "GD-BREAD",
-          category: "Bakery",
-          sellPrice: 38.4,
-          stock: 12,
-        },
-        {
-          id: 3,
-          name: "Milo 1kg",
-          sku: "MILO-1KG",
-          category: "Beverages",
-          sellPrice: 290.0,
-          stock: 6,
-        },
-      ];
+  <!-- Notification -->
+  <div class="notification" id="notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="notificationText">Product added to cart</span>
+  </div>
 
-      let orderCounter = 1;
+  <!-- Scripts -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/cart.js"></script>
+</body>
 
-      const inventoryTableBody = document.getElementById("inventoryTable");
-      const searchInput = document.getElementById("search_inventory");
-
-      const saleForm = document.getElementById("sale-form");
-      const saleProductSelect = document.getElementById("sale_product");
-      const saleQuantityInput = document.getElementById("sale_quantity");
-      const saleUnitSelect = document.getElementById("sale_unit");
-      const saleStockDisplay = document.getElementById("sale_stock_display");
-      const salePriceDisplay = document.getElementById("sale_price_display");
-      const saleTotalDisplay = document.getElementById("sale_total_display");
-      const salesTableBody = document.getElementById("salesTableBody");
-
-      // --- Render inventory table ---
-      function renderInventory(filterText = "") {
-        inventoryTableBody.innerHTML = "";
-
-        const term = filterText.toLowerCase();
-
-        products.forEach((product) => {
-          if (
-            term &&
-            !product.name.toLowerCase().includes(term) &&
-            !product.sku.toLowerCase().includes(term)
-          ) {
-            return; // skip if not match
-          }
-
-          const tr = document.createElement("tr");
-
-          tr.innerHTML = `
-            <td>${product.name}</td>
-            <td>${product.sku}</td>
-            <td>${product.category}</td>
-            <td>${product.sellPrice.toFixed(2)}</td>
-            <td>${product.stock}</td>
-          `;
-
-          inventoryTableBody.appendChild(tr);
-        });
-      }
-
-      // --- Populate product dropdown for sale form ---
-      function populateSaleProducts() {
-        saleProductSelect.innerHTML =
-          '<option value="">Select product...</option>';
-
-        products.forEach((product) => {
-          const option = document.createElement("option");
-          option.value = product.id;
-          option.textContent = `${product.name} (${product.sku})`;
-          saleProductSelect.appendChild(option);
-        });
-      }
-
-      // --- Update price + total preview + stock display ---
-      function updateSalePreview() {
-        const productId = parseInt(saleProductSelect.value, 10);
-        const quantity = parseInt(saleQuantityInput.value, 10) || 0;
-        const unit = saleUnitSelect.value;
-
-        const product = products.find((p) => p.id === productId);
-
-        if (!product) {
-          saleStockDisplay.textContent = "—";
-          salePriceDisplay.textContent = "—";
-          saleTotalDisplay.textContent = "—";
-          return;
-        }
-
-        // Display available stock based on selected unit
-        if (unit === 'kg') {
-          const availableKg = product.quantity_kg || 0;
-          saleStockDisplay.textContent = `${availableKg} kg available`;
-          saleStockDisplay.style.color = availableKg >= quantity ? '#059669' : '#dc2626';
-        } else if (unit && unit !== '') {
-          // For pieces, cartons, bale, outer - all use pieces
-          const availablePieces = product.quantity_pieces || 0;
-          saleStockDisplay.textContent = `${availablePieces} pieces available`;
-          saleStockDisplay.style.color = availablePieces >= quantity ? '#059669' : '#dc2626';
-        } else {
-          // Show both if no unit selected
-          const availableKg = product.quantity_kg || 0;
-          const availablePieces = product.quantity_pieces || 0;
-          if (availableKg > 0 && availablePieces > 0) {
-            saleStockDisplay.textContent = `${availableKg} kg, ${availablePieces} pieces available`;
-          } else if (availableKg > 0) {
-            saleStockDisplay.textContent = `${availableKg} kg available`;
-          } else if (availablePieces > 0) {
-            saleStockDisplay.textContent = `${availablePieces} pieces available`;
-          } else {
-            saleStockDisplay.textContent = "No stock available";
-            saleStockDisplay.style.color = '#dc2626';
-          }
-        }
-
-        salePriceDisplay.textContent = product.sellPrice.toFixed(2);
-
-        if (quantity > 0) {
-          const total = product.sellPrice * quantity;
-          saleTotalDisplay.textContent = total.toFixed(2);
-        } else {
-          saleTotalDisplay.textContent = "—";
-        }
-      }
-
-      // --- Handle search ---
-      searchInput.addEventListener("input", () => {
-        renderInventory(searchInput.value);
-      });
-
-      // --- Handle product / quantity / unit change for preview ---
-      saleProductSelect.addEventListener("change", updateSalePreview);
-      saleQuantityInput.addEventListener("input", updateSalePreview);
-      saleUnitSelect.addEventListener("change", updateSalePreview);
-
-      // --- Handle sale form submit ---
-      saleForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const productId = parseInt(saleProductSelect.value, 10);
-        const quantity = parseInt(saleQuantityInput.value, 10);
-        const unit = saleUnitSelect.value;
-
-        if (!productId || !quantity || quantity <= 0 || !unit) {
-          alert("Please select a product, enter a valid quantity, and choose a unit.");
-          return;
-        }
-
-        const product = products.find((p) => p.id === productId);
-
-        if (!product) {
-          alert("Product not found.");
-          return;
-        }
-
-        // Check stock based on selected unit
-        let availableStock = 0;
-        let stockField = '';
-        
-        if (unit === 'kg') {
-          availableStock = product.quantity_kg || 0;
-          stockField = 'quantity_kg';
-        } else {
-          // For pieces, cartons, bale, outer - all use pieces
-          availableStock = product.quantity_pieces || 0;
-          stockField = 'quantity_pieces';
-        }
-
-        if (quantity > availableStock) {
-          alert(`Not enough stock! Available: ${availableStock} ${unit === 'kg' ? 'kg' : 'pieces'}`);
-          return;
-        }
-
-        // Show loading state
-        const submitBtn = saleForm.querySelector('.primary-btn');
-        if (submitBtn) {
-          submitBtn.classList.add('loading');
-          submitBtn.disabled = true;
-        }
-
-        try {
-          const totalAmount = product.sellPrice * quantity;
-
-          // 1. Insert into sales table
-          const { error: saleError } = await supabase.from('sales').insert({
-            product_id: product.id,
-            quantity,
-            total_amount: totalAmount,
-            unit: unit
-          });
-
-          if (saleError) {
-            throw saleError;
-          }
-
-          // 2. Update product stock based on unit
-          const updateData = {};
-          if (unit === 'kg') {
-            updateData.quantity_kg = (product.quantity_kg || 0) - quantity;
-          } else {
-            updateData.quantity_pieces = (product.quantity_pieces || 0) - quantity;
-          }
-
-          const { error: updateError } = await supabase
-            .from('products')
-            .update(updateData)
-            .eq('id', product.id);
-
-          if (updateError) {
-            throw updateError;
-          }
-
-          // 3. Update local product cache
-          if (unit === 'kg') {
-            product.quantity_kg = updateData.quantity_kg;
-          } else {
-            product.quantity_pieces = updateData.quantity_pieces;
-          }
-
-          // 4. Create sale row in table
-          const orderId = "#ORD-" + String(orderCounter).padStart(3, "0");
-          orderCounter++;
-
-          const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${orderId}</td>
-            <td>${product.name}</td>
-            <td>${quantity} ${unit === 'kg' ? 'kg' : unit}</td>
-            <td>KSH ${product.sellPrice.toFixed(2)}</td>
-            <td>KSH ${totalAmount.toFixed(2)}</td>
-            <td>${today}</td>
-          `;
-
-          // Add new sale at the top
-          if (salesTableBody.firstChild) {
-            salesTableBody.insertBefore(tr, salesTableBody.firstChild);
-          } else {
-            salesTableBody.appendChild(tr);
-          }
-
-          // Refresh inventory table
-          renderInventory(searchInput.value || "");
-
-          // Reset form
-          saleForm.reset();
-          saleStockDisplay.textContent = "—";
-          salePriceDisplay.textContent = "—";
-          saleTotalDisplay.textContent = "—";
-
-          alert(`Sale recorded successfully! Total: KSH ${totalAmount.toFixed(2)}`);
-
-        } catch (error) {
-          console.error('Error recording sale:', error);
-          alert('Error recording sale: ' + (error.message || 'Unknown error'));
-        } finally {
-          // Reset button state
-          if (submitBtn) {
-            submitBtn.classList.remove('loading');
-            submitBtn.disabled = false;
-          }
-        }
-      });
-
-      // --- Initial render ---
-      renderInventory();
-      populateSaleProducts();
-    </script>
-    
-    <!-- Scripts -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="js/supabaseClient.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/theme.js"></script>
-    <script src="js/shopkeeper.js"></script>
-  </body>
 </html>

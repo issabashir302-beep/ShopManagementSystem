@@ -4395,3 +4395,530 @@ body.light-theme .sales-stat-card:hover {
   border-color: rgba(102, 126, 234, 0.3);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
+/* ============================================
+   SHOPKEEPER DASHBOARD ENHANCEMENTS
+   ============================================ */
+
+/* ============================================
+   CART COMPONENTS
+   ============================================ */
+.cart-panel {
+    composes: panel;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.cart-items {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: var(--spacing-lg);
+    min-height: 200px;
+    max-height: 400px;
+}
+
+.empty-cart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+.empty-cart i {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.empty-cart p:first-of-type {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-text);
+}
+
+.empty-cart p:last-of-type {
+    font-size: 14px;
+    margin: 0;
+}
+
+.cart-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto auto;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    transition: var(--transition);
+}
+
+.cart-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.cart-item-name {
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.cart-item-price {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+}
+
+.cart-item-quantity {
+    font-weight: 600;
+    color: var(--color-text);
+    min-width: 30px;
+    text-align: center;
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    width: fit-content;
+}
+
+.quantity-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--color-text);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.quantity-btn:active {
+    transform: scale(0.95);
+}
+
+.quantity-btn.decrease {
+    color: var(--color-danger);
+}
+
+.quantity-btn.increase {
+    color: var(--color-success);
+}
+
+.remove-item-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-item-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: scale(1.05);
+}
+
+.remove-item-btn:active {
+    transform: scale(0.95);
+}
+
+/* ============================================
+   CART SUMMARY
+   ============================================ */
+.cart-summary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+}
+
+.summary-item:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.summary-label {
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+.summary-value {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 16px;
+}
+
+.summary-item:last-child .summary-value {
+    font-size: 20px;
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+/* ============================================
+   CART ACTIONS
+   ============================================ */
+.cart-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+/* ============================================
+   NOTIFICATION COMPONENT
+   ============================================ */
+.notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+    max-width: 400px;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification i {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.notification-success {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1));
+}
+
+.notification-success i {
+    color: var(--color-success);
+}
+
+.notification-warning {
+    border-color: rgba(245, 158, 11, 0.3);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1));
+}
+
+.notification-warning i {
+    color: var(--color-warning);
+}
+
+.notification-error {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+}
+
+.notification-error i {
+    color: var(--color-danger);
+}
+
+/* ============================================
+   ADD TO CART BUTTON
+   ============================================ */
+.add-to-cart-btn {
+    composes: btn-base;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: var(--color-info);
+    white-space: nowrap;
+}
+
+.add-to-cart-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: var(--color-info);
+}
+
+.add-to-cart-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(100, 116, 139, 0.1);
+    border-color: rgba(100, 116, 139, 0.2);
+    color: var(--color-text-muted);
+}
+
+.add-to-cart-btn:disabled:hover {
+    transform: none;
+    background: rgba(100, 116, 139, 0.1);
+}
+
+/* ============================================
+   CART BUTTONS DISABLED STATES
+   ============================================ */
+.secondary-btn:disabled,
+.primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.secondary-btn:disabled:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.primary-btn:disabled:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* ============================================
+   RESPONSIVE CART STYLES
+   ============================================ */
+@media (max-width: 1200px) {
+    .cart-item {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+        text-align: center;
+    }
+    
+    .cart-item-controls {
+        justify-self: center;
+    }
+    
+    .cart-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .cart-items {
+        max-height: 300px;
+    }
+    
+    .cart-item {
+        padding: var(--spacing-sm);
+    }
+    
+    .notification {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .cart-item {
+        font-size: 14px;
+    }
+    
+    .quantity-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+    
+    .remove-item-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .summary-value {
+        font-size: 14px;
+    }
+    
+    .summary-item:last-child .summary-value {
+        font-size: 18px;
+    }
+}
+
+/* ============================================
+   LIGHT MODE CART STYLES
+   ============================================ */
+@media (prefers-color-scheme: light) {
+    .cart-item {
+        background: rgba(241, 245, 249, 0.7);
+        border-color: rgba(203, 213, 225, 0.3);
+    }
+    
+    .cart-item:hover {
+        background: rgba(241, 245, 249, 0.9);
+        border-color: rgba(203, 213, 225, 0.4);
+    }
+    
+    .cart-item-controls {
+        background: rgba(241, 245, 249, 0.9);
+    }
+    
+    .quantity-btn {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(203, 213, 225, 0.5);
+        color: var(--color-text-dark);
+    }
+    
+    .quantity-btn:hover {
+        background: rgba(255, 255, 255, 1);
+        border-color: rgba(203, 213, 225, 0.7);
+    }
+    
+    .remove-item-btn {
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.15);
+        color: #dc2626;
+    }
+    
+    .remove-item-btn:hover {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+    
+    .cart-summary {
+        background: rgba(241, 245, 249, 0.7);
+        border-color: rgba(203, 213, 225, 0.3);
+    }
+    
+    .summary-item:not(:last-child) {
+        border-bottom-color: rgba(203, 213, 225, 0.3);
+    }
+    
+    .summary-label {
+        color: #64748b;
+    }
+    
+    .summary-value {
+        color: var(--color-text-dark);
+    }
+    
+    .add-to-cart-btn {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.2);
+        color: #2563eb;
+    }
+    
+    .add-to-cart-btn:hover {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .add-to-cart-btn:disabled {
+        background: rgba(100, 116, 139, 0.08);
+        border-color: rgba(100, 116, 139, 0.15);
+        color: #64748b;
+    }
+    
+    .notification {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(203, 213, 225, 0.3);
+        color: var(--color-text-dark);
+    }
+}
+
+/* ============================================
+   THEME CLASS SUPPORT FOR CART
+   ============================================ */
+body.light-theme .cart-item {
+    background: rgba(241, 245, 249, 0.7);
+    border-color: rgba(203, 213, 225, 0.3);
+}
+
+body.light-theme .cart-item:hover {
+    background: rgba(241, 245, 249, 0.9);
+    border-color: rgba(203, 213, 225, 0.4);
+}
+
+body.light-theme .cart-item-controls {
+    background: rgba(241, 245, 249, 0.9);
+}
+
+body.light-theme .quantity-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(203, 213, 225, 0.5);
+    color: var(--color-text-dark);
+}
+
+body.light-theme .notification {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(203, 213, 225, 0.3);
+    color: var(--color-text-dark);
+}
+
+/* ============================================
+   SCROLLBAR FOR CART ITEMS
+   ============================================ */
+.cart-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cart-items::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.cart-items::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.cart-items::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Light mode scrollbar for cart */
+@media (prefers-color-scheme: light) {
+    .cart-items::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .cart-items::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+    }
+    
+    .cart-items::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Theme class scrollbar support */
+body.light-theme .cart-items::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .cart-items::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+}
