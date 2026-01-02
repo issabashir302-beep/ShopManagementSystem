@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopwise | Sales History</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Glass Sidebar -->
+    <aside class="glass-sidebar" id="sidebar">
+        <!-- Logo Section -->
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="logo-text">
+                    <h1 class="logo-title">Shopwise</h1>
+                    <span class="logo-subtitle">Owner Dashboard</span>
+                </div>
+            </div>
+
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+
+        <!-- Simplified Navigation -->
+        <nav class="sidebar-nav">
+            <a href="owner.html" class="nav-item" data-tooltip="Overview">
+                <div class="nav-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <span class="nav-label">Overview</span>
+            </a>
+            <a href="inventory.html" class="nav-item" data-tooltip="Inventory">
+                <div class="nav-icon">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <span class="nav-label">Inventory</span>
+            </a>
+            <a href="sales.html" class="nav-item active" data-tooltip="Sales">
+                <div class="nav-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <span class="nav-label">Sales</span>
+                <div class="nav-indicator"></div>
+            </a>
+            <a href="shopkeepers.html" class="nav-item" data-tooltip="Shopkeepers">
+                <div class="nav-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <span class="nav-label">Shopkeepers</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="user-profile-card">
+            <div class="user-avatar">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Owner" alt="Owner">
+            </div>
+            <div class="user-info">
+                <h4 class="user-name">Shop Owner</h4>
+                <span class="user-role">Administrator</span>
+            </div>
+            <button class="quick-menu-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="glass-header">
+            <div class="header-left">
+                <button class="mobile-menu-btn" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title">
+                    <h2 id="pageTitle">Sales History</h2>
+                    <span class="last-updated" id="lastUpdated">Updated just now</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <!-- Theme Toggle -->
+                <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+
+                <!-- Search -->
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search..." id="globalSearch">
+                </div>
+
+                <!-- Date -->
+                <div class="datetime-widget">
+                    <div class="date">
+                        <i class="far fa-calendar"></i>
+                        <span id="currentDate">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="daily-stats">
+                    <div class="stat-item today">
+                        <span class="stat-label">Today's Sales</span>
+                        <span class="stat-value">KSh 0</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sales Section -->
+        <section id="sales" class="content-section active">
+            <div class="metrics-grid" style="margin-bottom: var(--spacing-lg);">
+                <div class="metric-card glass">
+                    <div class="metric-content">
+                        <div class="metric-header">
+                            <h3 class="metric-title">Total Revenue</h3>
+                            <div class="metric-badge up">
+                                <i class="fas fa-arrow-up"></i>
+                                15%
+                            </div>
+                        </div>
+                        <div class="metric-value">KSh 12,845</div>
+                        <div class="metric-details">
+                            <div class="detail-item">
+                                <span class="detail-label">This Month</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-icon-large">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+
+                <div class="metric-card glass">
+                    <div class="metric-content">
+                        <div class="metric-header">
+                            <h3 class="metric-title">Total Profit</h3>
+                            <div class="metric-badge up">
+                                <i class="fas fa-arrow-up"></i>
+                                19.7%
+                            </div>
+                        </div>
+                        <div class="metric-value" id="totalProfitValue">KSh 2,450</div>
+                        <div class="metric-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Margin: 19%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-icon-large">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+
+                <div class="metric-card glass">
+                    <div class="metric-content">
+                        <div class="metric-header">
+                            <h3 class="metric-title">Avg. Order Value</h3>
+                            <div class="metric-badge down">
+                                <i class="fas fa-arrow-down"></i>
+                                3%
+                            </div>
+                        </div>
+                        <div class="metric-value">KSh 39</div>
+                        <div class="metric-details">
+                            <div class="detail-item">
+                                <span class="detail-label">This Month</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-icon-large">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-tables">
+                <div class="tables-grid">
+                    <div class="table-card glass">
+                        <div class="table-header">
+                            <div class="table-title-group">
+                                <h3 class="table-title">Sales History</h3>
+                                <span class="table-subtitle">All completed transactions</span>
+                            </div>
+                            <button class="table-action-btn" id="exportSales">
+                                <i class="fas fa-download"></i>
+                                Export
+                            </button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="sales-table" id="salesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Units</th>
+                                        <th>Buy Price</th>
+                                        <th>Sell Price</th>
+                                        <th>Profit</th>
+                                        <th>Date</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesTableBody">
+                                    <!-- Sales data populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="table-footer">
+                            <div class="pagination">
+                                <button class="pagination-btn prev" id="salesPrev">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span class="pagination-info" id="salesPagination">1-0 of 0</span>
+                                <button class="pagination-btn next" id="salesNext">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        </section>
+        </div>
+        </div>
+
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast-notification" id="toast">
+        <div class="toast-content">
+            <div class="toast-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="toast-message">
+                <h4>Success</h4>
+                <p>Action completed successfully</p>
+            </div>
+        </div>
+        <div class="toast-progress"></div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
