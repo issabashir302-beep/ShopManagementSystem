@@ -1,28 +1,37 @@
-//controllers/salesController.js
+import { supabase } from '../config/supabase.js'
 
-//initialize supabase client
-const supabase = require('../config/supabase');
+// Create Sale (header)
+export const createSale = async (req, res) => {
+  const sale = req.body
 
-//record a sale
-const recordSale = async (req, res) => {
-  const { item_id, quantity, total_price } = req.body;
-  try {
-    const { data, error } = await supabase.from('sales').insert([{ item_id, quantity, total_price }]);
-    if (error) return res.status(400).json(error);
-    res.status(201).json({ data });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  const { data, error } = await supabase
+    .from('sales')
+    .insert(sale)
+    .select()
+    .single()
 
-//get all sales
-const getSales = async (req, res) => {
-  try {
-    const { data, error } = await supabase.from('sales').select('*');
-    if (error) return res.status(400).json(error);
-    res.status(200).json({ data });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-module.exports = { recordSale, getSales };
+  if (error) return res.status(400).json(error)
+  res.json(data)
+}
+
+// Add sale items (trigger handles stock)
+export const addSaleItems = async (req, res) => {
+  const items = req.body
+
+  const { data, error } = await supabase
+    .from('sale_items')
+    .insert(items)
+
+  if (error) return res.status(400).json(error)
+  res.json(data)
+}
+
+// Daily analytics view
+export const dailySales = async (req, res) => {
+  const { data, error } = await supabase
+    .from('daily_sales_summary')
+    .select('*')
+
+  if (error) return res.status(400).json(error)
+  res.json(data)
+}

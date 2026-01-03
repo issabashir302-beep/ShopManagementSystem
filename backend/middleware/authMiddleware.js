@@ -1,24 +1,18 @@
-//get supabase client
-const supabase = require('../config/supabase');
+import { supabase } from '../config/supabase.js'
 
-
-const authMiddleware = async (req, res, next) => {
-  const token = req.headers['authorization'];
+export const requireAuth = async (req, res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '')
 
   if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    return res.status(401).json({ error: 'Missing token' })
   }
 
-  try {
-    const { user, error } = await supabase.auth.api.getUser(token);
-    if (error || !user) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
-    }
-    req.user = user; // Store user info in request object
-    next(); // Proceed to the next middleware or route handler
-  } catch (error) {
-    return res.status(500).json({ message: 'Authentication failed', error: error.message });
-  }
-};
+  const { data, error } = await supabase.auth.getUser(token)
 
-module.exports = authMiddleware;
+  if (error) {
+    return res.status(401).json({ error: 'Invalid token' })
+  }
+
+  req.user = data.user
+  next()
+}

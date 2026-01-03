@@ -1,30 +1,35 @@
-// controllers/authController.js
+import { supabase } from '../config/supabase.js'
 
-//initialize supabase client
-const supabase = require('../config/supabase');
+export const signup = async (req, res) => {
+  const { email, password, full_name, role, phone } = req.body
 
-//create a signup controller that validates input before creating a new user
-const signup = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const { user, error } = await supabase.auth.signUp({ email, password });
-    if (error) return res.status(400).json(error);
-    res.status(201).json({ user });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  })
 
-//create a login controller that validates input before logging in a user
-const login = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const { user, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return res.status(400).json(error);
-    res.status(200).json({ user });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  if (error) return res.status(400).json(error)
 
-module.exports = { signup, login };
+  // create profile
+  await supabase.from('users').insert({
+    id: data.user.id,
+    full_name,
+    role,
+    phone
+  })
+
+  res.json({ message: 'User created' })
+}
+
+export const login = async (req, res) => {
+  const { email, password } = req.body
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
+
+  if (error) return res.status(401).json(error)
+
+  res.json(data)
+}

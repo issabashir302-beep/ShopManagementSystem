@@ -1,16 +1,9 @@
-// config/supabase.js
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+import { createClient } from '@supabase/supabase-js'
+import dotenv from 'dotenv'
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+dotenv.config()
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  throw new Error(
-    'SUPABASE_URL and SUPABASE_KEY are required. Create a `.env` in the backend folder (or export the env vars) using `.env.example` as a template.'
-  );
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-module.exports = supabase;
+export const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY // server-only key
+)

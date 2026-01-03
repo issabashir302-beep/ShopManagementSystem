@@ -1,11 +1,15 @@
-// routes/salesRoutes.js
-const express = require('express');
-const { recordSale, getSales } = require('../controllers/salesController');
-const authMiddleware = require('../middleware/authMiddleware');
-const router = express.Router();
+import express from 'express'
+import { requireAuth } from '../middleware/authMiddleware.js'
+import {
+  createSale,
+  addSaleItems,
+  dailySales
+} from '../controllers/salesController.js'
 
-//protected routes
-router.post('/', authMiddleware, recordSale);
-router.get('/', authMiddleware, getSales);
+const router = express.Router()
 
-module.exports = router;
+router.post('/', requireAuth, createSale)
+router.post('/items', requireAuth, addSaleItems)
+router.get('/daily', requireAuth, dailySales)
+
+export default router
