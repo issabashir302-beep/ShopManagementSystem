@@ -2,17 +2,21 @@ import { supabase } from '../config/supabase.js'
 
 // Create Sale (header)
 export const createSale = async (req, res) => {
-  const sale = req.body
+  const { supabase } = req
+  const { sale, items } = req.body
 
-  const { data, error } = await supabase
-    .from('sales')
-    .insert(sale)
-    .select()
-    .single()
+  const { data, error } = await supabase.rpc(
+    'create_sale_with_items',
+    {
+      sale_data: sale,
+      items
+    }
+  )
 
   if (error) return res.status(400).json(error)
-  res.json(data)
+  res.json({ sale_id: data })
 }
+
 
 // Add sale items (trigger handles stock)
 export const addSaleItems = async (req, res) => {

@@ -121,15 +121,43 @@
                 </div>
             </div>
 
+            <!-- Email Address -->
             <div class="form-group" style="margin-bottom: var(--spacing-md);">
-                <label class="form-label">Email Address</label>
-                <div class="input-wrapper" style="position: relative;">
-                    <i class="far fa-envelope"
-                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                    <input type="email" class="form-input" style="padding-left: 40px; width: 100%;"
-                        placeholder="name@company.com" required>
-                </div>
+            <label class="form-label" for="email">Email Address</label>
+            <div class="input-wrapper" style="position: relative;">
+                <i class="far fa-envelope"
+                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-input"
+                style="padding-left: 40px; width: 100%;"
+                placeholder="name@company.com"
+                required
+                >
             </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="form-group" style="margin-bottom: var(--spacing-md);">
+            <label class="form-label" for="phone">Phone Number</label>
+            <div class="input-wrapper" style="position: relative;">
+                <i class="fas fa-phone"
+                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                <input
+                type="tel"
+                id="phone"
+                name="phone"
+                class="form-input"
+                style="padding-left: 40px; width: 100%;"
+                placeholder="+254712345678"
+                pattern="^\+?[0-9]{9,15}$"
+                required
+                >
+            </div>
+            </div>
+
 
             <div class="form-group" style="margin-bottom: var(--spacing-md);">
                 <label class="form-label">Password</label>
@@ -162,6 +190,61 @@
             Already have an account? <a href="login.html" class="auth-link">Sign in</a>
         </div>
     </div>
+
+    <script>
+  const signupForm = document.getElementById('signupForm')
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault()
+
+    // Get inputs (order matters based on your HTML)
+    const fullName = signupForm.querySelectorAll('input')[0].value.trim()
+    const email = signupForm.querySelectorAll('input')[1].value.trim()
+    const phone = signupForm.querySelectorAll('input')[2].value.trim()
+    const password = signupForm.querySelectorAll('input')[3].value
+    const confirmPassword = signupForm.querySelectorAll('input')[4].value
+
+    // Basic validation
+    if (password !== confirmPassword) {
+      alert('Passwords do not match')
+      return
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          full_name: fullName,
+          email,
+          phone,
+          password,
+          role: 'owner' // or 'shopkeeper' if needed
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'Signup failed')
+        return
+      }
+
+      alert('Account created successfully!')
+      signupForm.reset()
+
+      // Optional redirect
+      window.location.href = 'login.html'
+
+    } catch (err) {
+      console.error(err)
+      alert('Server error. Please try again.')
+    }
+  })
+</script>
+
 </body>
 
 </html>
