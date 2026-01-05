@@ -362,32 +362,38 @@ function switchTrackerTab(clickedTab) {
 async function handleAddProduct(e) {
     e.preventDefault();
     const form = e.target;
+
+    // Extract values
     const name = form.productName.value.trim();
     const sku = form.sku.value.trim();
-    const category = form.category?.value || null;
     const stock = Number(form.stock.value || 0);
     const unit = form.unit.value;
     const buyPrice = parseFloat(form.buyPrice.value || 0);
     const sellPrice = parseFloat(form.sellPrice.value || 0);
-    const supplier = form.supplier?.value || 'Not specified';
+
+    // Defaults for fields not in form
+    const category = 'General';
+    const supplier = 'Owner';
 
     if (!name || !sku || !unit) {
         alert('Please fill required fields (Product Name, SKU, Unit)');
         return;
     }
 
+    // Payload matching Supabase/Backend expectatons (snake_case)
     const payload = {
-        name,
-        sku,
-        category,
-        stock,
-        unit,
-        buyPrice,
-        sellPrice,
+        product_name: name,     // Backend likely expects snake_case or we map it
+        sku: sku,
+        category: category,
+        stock: stock,
+        unit: unit,
         buying_price: buyPrice,
         selling_price: sellPrice,
-        supplier,
-        sales: 0
+        supplier: supplier,
+        // Include camelCase just in case some legacy part needs it, but backend is primary
+        name: name,
+        buyPrice: buyPrice,
+        sellPrice: sellPrice
     };
 
     const accessToken = localStorage.getItem('access_token');
@@ -397,7 +403,10 @@ async function handleAddProduct(e) {
     }
 
     const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn && (submitBtn.disabled = true);
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+    }
 
     try {
         const res = await fetch('http://localhost:5000/api/inventory', {
@@ -406,14 +415,13 @@ async function handleAddProduct(e) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`
             },
-            credentials: 'include',
             body: JSON.stringify(payload)
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-            throw new Error(data.error?.message || data.error || JSON.stringify(data));
+            throw new Error(data.error?.message || data.error || data.message || 'Failed to add product');
         }
 
         showToast(`Product "${name}" added successfully!`, 'success');
@@ -423,10 +431,13 @@ async function handleAddProduct(e) {
         await fetchProductsFromServer();
 
     } catch (err) {
-        console.error(err);
-        alert('Failed to add product: ' + err.message);
+        console.error('Add Product Error:', err);
+        showToast(err.message, 'error');
     } finally {
-        submitBtn && (submitBtn.disabled = false);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Product';
+        }
     }
 }
 
