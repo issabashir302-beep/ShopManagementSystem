@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../config/supabase.js';
 
 export const createShop = async (req, res) => {
@@ -85,4 +86,96 @@ export const inviteShopkeeper = async (req, res) => {
   if (error) return res.status(400).json(error)
 
   res.json({ message: 'Invite sent' })
+}
+
+// Add Shopkeeper (Create User directly)
+export const addShopkeeper = async (req, res) => {
+  const { email, password, name, phone } = req.body
+  const { user } = req // Owner (authenticated user)
+
+  // 1. Get Owner's Shop
+  const admin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+
+  try {
+    // Check if owner has a shop
+    const { data: shop, error: shopError } = await admin
+      .from('shops')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single()
+
+    if (shopError || !shop) {
+      return res.status(400).json({ message: 'You must have a shop to add shopkeepers.' })
+    }
+
+    // 2. Create User in Auth
+    const { data: newUser, error: createError } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: name }
+    })
+
+    if (createError) throw createError
+
+    // 3. Create entry in public.users linked to shop
+    const { error: insertError } = await admin
+      .from('users')
+      .insert({
+        id: newUser.user.id,
+        full_name: name,
+        email: email, // redundant but useful if schema has it
+        phone: phone,
+        role: 'shopkeeper', // lowercase standard
+        shop_id: shop.id
+      })
+
+    if (insertError) {
+      // Cleanup auth user if profile creation fails? For now just error.
+      throw insertError
+    }
+
+    res.json({ message: 'Shopkeeper created successfully', user: newUser.user })
+
+  } catch (err) {
+    console.error('addShopkeeper error:', err)
+    res.status(400).json({ error: err.message || 'Failed to add shopkeeper' })
+  }
+}
+
+export const getShopkeepers = async (req, res) => {
+  const { user } = req
+  const { supabase } = req // User client is fine here if RLS allows owner to see their shopkeepers
+
+  try {
+    // 1. Get Owner's Shop ID first (optimally we would rely on RLS, but user might strictly be owner)
+    // Actually, RLS on 'users' table usually prevents seeing others. 
+    // We might need to query 'users' where shop_id matches the owner's shop_id.
+
+    // Let's first find the shop owned by this user
+    const { data: shop } = await supabase
+      .from('shops')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single()
+
+    if (!shop) return res.json([]) // No shop, no shopkeepers
+
+    // 2. Fetch users with role 'shopkeeper' in this shop
+    const { data: shopkeepers, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('shop_id', shop.id)
+      .eq('role', 'shopkeeper')
+
+    if (error) throw error
+
+    res.json(shopkeepers)
+  } catch (err) {
+    console.error('getShopkeepers error:', err)
+    res.status(500).json({ error: 'Failed to fetch shopkeepers' })
+  }
 }

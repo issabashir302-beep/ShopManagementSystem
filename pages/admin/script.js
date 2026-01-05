@@ -401,7 +401,7 @@ function exportInventoryToExcel() {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
 
-        const filename = `inventory_${new Date().toISOString().slice(0,10)}.xlsx`;
+        const filename = `inventory_${new Date().toISOString().slice(0, 10)}.xlsx`;
         XLSX.writeFile(wb, filename);
 
         showToast('Inventory exported', 'success');
@@ -701,31 +701,61 @@ function populateSalesTable() {
     });
 }
 
-function populateShopkeepersTable() {
+async function populateShopkeepersTable() {
     const tbody = document.getElementById('shopkeepersTableBody');
     if (!tbody) return;
 
-    tbody.innerHTML = '';
-    shopkeepers.forEach(sk => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <div style="font-weight: 500;">${sk.name}</div>
-                <div style="font-size: 0.75rem; color: var(--text-tertiary);">${sk.email}</div>
-            </td>
-            <td>${sk.phone}</td>
-            <td>${sk.role}</td>
-            <td><span class="status-pill ${sk.status.toLowerCase()}">${sk.status}</span></td>
-            <td>${sk.addedOn}</td>
-            <td>
-                <div class="action-buttons">
-                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
+
+    try {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        const res = await fetch('http://localhost:5000/api/shops/shopkeepers', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+            // fallback to empty or local demo data if needed, but best to show empty
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No shopkeepers found.</td></tr>';
+            return;
+        }
+
+        const data = await res.json();
+
+        // Update local state if we want (optional)
+        shopkeepers = data;
+
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No shopkeepers found.</td></tr>';
+            return;
+        }
+
+        data.forEach(sk => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div style="font-weight: 500;">${sk.full_name || sk.name || 'Unknown'}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-tertiary);">${sk.email}</div>
+                </td>
+                <td>${sk.phone || '-'}</td>
+                <td><span class="badge badge-blue">${sk.role || 'Shopkeeper'}</span></td>
+                <td><span class="status-pill active">Active</span></td>
+                <td>${new Date(sk.created_at || Date.now()).toLocaleDateString()}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn delete" onclick="alert('Delete not implemented yet')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Failed to load shopkeepers.</td></tr>';
+    }
 }
 
 function updateLowStockList() {
@@ -847,11 +877,11 @@ async function checkShop() {
         // Don't block the experience if the check fails
     }
 }
-    list.innerHTML = '';
-    lowStock.forEach(p => {
-        const div = document.createElement('div');
-        div.className = `alert-item ${p.stock <= 5 ? 'critical' : 'low'}`;
-        div.innerHTML = `
+list.innerHTML = '';
+lowStock.forEach(p => {
+    const div = document.createElement('div');
+    div.className = `alert-item ${p.stock <= 5 ? 'critical' : 'low'}`;
+    div.innerHTML = `
             <div class="product-avatar"><i class="fas fa-box"></i></div>
             <div class="alert-content">
                 <h4>${p.name}</h4>
@@ -862,17 +892,17 @@ async function checkShop() {
             </div>
             <button class="alert-action" data-id="${p.id}"><i class="fas fa-plus"></i> Restock</button>
         `;
-        list.appendChild(div);
-    });
+    list.appendChild(div);
+});
 
-    // Alert actions
-    list.querySelectorAll('.alert-action').forEach(btn => {
-        btn.addEventListener('click', () => restockProduct(btn.dataset.id));
-    });
+// Alert actions
+list.querySelectorAll('.alert-action').forEach(btn => {
+    btn.addEventListener('click', () => restockProduct(btn.dataset.id));
+});
 
-    // Update counts
-    const lowCount = document.getElementById('lowStockCount');
-    if (lowCount) lowCount.textContent = lowStock.length;
+// Update counts
+const lowCount = document.getElementById('lowStockCount');
+if (lowCount) lowCount.textContent = lowStock.length;
 
 
 function updateSalesMetrics(isSalesPage = false) {
@@ -1032,22 +1062,57 @@ function handleConfirmDelete(e) {
     updateInventoryValue();
 }
 
-function handleAddShopkeeper(e) {
+async function handleAddShopkeeper(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-    shopkeepers.push({
-        id: shopkeepers.length + 1,
-        name: formData.get('name'),
-        email: formData.get('email'),
-        phone: formData.get('phone'),
-        role: "Shopkeeper",
-        status: "Pending",
-        addedOn: new Date().toISOString().split('T')[0]
-    });
-    closeModal('addShopkeeperModal');
-    e.target.reset();
-    showToast('Invitation sent!', 'success');
-    populateShopkeepersTable();
+    const name = formData.get('name');
+    const email = formData.get('email');
+    const phone = formData.get('phone');
+
+    // Auto-generate password (or could be input)
+    const password = "Shopkeeper123!";
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    }
+
+    try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('http://localhost:5000/api/shops/shopkeepers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name, email, phone, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || data.message || 'Failed to add shopkeeper');
+        }
+
+        closeModal('addShopkeeperModal');
+        e.target.reset();
+
+        // Show success with credentials hint
+        showToast('Shopkeeper created!', 'success');
+        alert(`✅ Shopkeeper created successfully!\n\nEmail: ${email}\nPassword: ${password}\n\nPlease share these credentials with your staff.`);
+
+        populateShopkeepersTable();
+
+    } catch (err) {
+        console.error('Add Shopkeeper Error:', err);
+        showToast(err.message, 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Send Invitation';
+        }
+    }
 }
 
 function showHelp() { showToast('Help center coming soon!', 'info'); }
