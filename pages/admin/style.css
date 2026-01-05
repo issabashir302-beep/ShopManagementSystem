@@ -1448,6 +1448,33 @@ body {
     flex-shrink: 0;
 }
 
+/* Stock indicator */
+.stock-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stock-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-tertiary);
+    display: inline-block;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.02) inset;
+}
+
+.stock-indicator.critical .stock-dot {
+    background: var(--danger);
+}
+
+.stock-indicator.warning .stock-dot {
+    background: var(--warning);
+}
+
+.stock-indicator.healthy .stock-dot {
+    background: var(--success);
+}
 .alert-content {
     flex: 1;
     min-width: 0;

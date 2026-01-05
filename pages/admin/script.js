@@ -175,6 +175,9 @@ function initializeCommon() {
         logoutBtn.addEventListener('click', handleLogout);
     }
 
+    // Populate user info in sidebar
+    fetchAndPopulateUser();
+
     // Global Search (Just a placeholder for now)
     const globalSearch = document.getElementById('globalSearch');
     if (globalSearch) {
@@ -277,7 +280,7 @@ function initializeInventory() {
     if (searchInput) searchInput.addEventListener('input', handleInventorySearch);
 
     const exportBtn = document.getElementById('exportInventory');
-    if (exportBtn) exportBtn.addEventListener('click', () => showToast('Inventory exported!', 'success'));
+    if (exportBtn) exportBtn.addEventListener('click', exportInventoryToExcel);
 
     // Pagination (Placeholder)
     document.getElementById('inventoryPrev')?.addEventListener('click', () => showToast('Previous page', 'info'));
@@ -335,6 +338,76 @@ function updateDateTime() {
     if (lastUpdated) {
         const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
         lastUpdated.textContent = `Updated at ${now.toLocaleTimeString('en-KE', timeOptions)}`;
+    }
+}
+
+// Fetch current authenticated user and populate sidebar profile
+async function fetchAndPopulateUser() {
+    const nameEl = document.getElementById('userName');
+    const emailEl = document.getElementById('userEmail');
+
+    if (!nameEl && !emailEl) return; // nothing to do on pages without profile card
+
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        // If not logged in, clear any existing placeholders
+        if (nameEl) nameEl.textContent = 'Guest';
+        if (emailEl) emailEl.textContent = '';
+        return;
+    }
+
+    try {
+        const res = await fetch('http://localhost:5000/api/auth/me', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) return; // silently fail if auth/me not available
+
+        const data = await res.json();
+        if (nameEl) nameEl.textContent = data.full_name || data.name || data.username || 'User';
+        if (emailEl) emailEl.textContent = data.email || data.phone || '';
+    } catch (err) {
+        console.error('fetchAndPopulateUser error:', err);
+    }
+}
+
+// Export current inventory to an Excel (.xlsx) file using SheetJS
+function exportInventoryToExcel() {
+    try {
+        if (!window.XLSX) {
+            showToast('Export library not available', 'error');
+            return;
+        }
+
+        if (!products || products.length === 0) {
+            showToast('No products to export', 'info');
+            return;
+        }
+
+        // Transform products into a sheet-friendly structure
+        const exportData = products.map(p => ({
+            Product: p.name,
+            SKU: p.sku,
+            Category: getCategoryName(p.category),
+            Quantity: p.stock,
+            Unit: p.unit,
+            'Buying Price (KES)': Number(p.buyPrice).toFixed(2),
+            'Selling Price (KES)': Number(p.sellPrice).toFixed(2),
+            Supplier: p.supplier,
+            'Total Value (KES)': (Number(p.stock || 0) * Number(p.sellPrice || 0)).toFixed(2)
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+
+        const filename = `inventory_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, filename);
+
+        showToast('Inventory exported', 'success');
+    } catch (err) {
+        console.error('exportInventoryToExcel error:', err);
+        showToast('Failed to export inventory', 'error');
     }
 }
 
@@ -458,7 +531,7 @@ async function fetchProductsFromServer() {
             name: p.name || p.product_name || '',
             sku: p.sku || p.code || '',
             category: p.category || '',
-            stock: Number(p.stock || 0),
+            stock: Number(p.quantity || 0),
             unit: p.unit || '',
             buyPrice: Number(p.buyPrice ?? p.buying_price ?? p.buy_price ?? 0),
             sellPrice: Number(p.sellPrice ?? p.selling_price ?? p.sell_price ?? 0),
@@ -470,6 +543,12 @@ async function fetchProductsFromServer() {
 
         const totalProducts = document.getElementById('totalProducts');
         if (totalProducts) totalProducts.textContent = products.length;
+
+        // Update low stock indicators and lists
+        updateLowStockList();
+
+        // Update inventory totals
+        updateInventoryValue();
     } catch (err) {
         console.error(err);
         showToast('Failed to load products from server', 'error');
@@ -562,8 +641,9 @@ function populateInventoryTable() {
             <td>KSh ${product.sellPrice.toFixed(2)}</td>
             <td>
                 <div class="stock-indicator ${stockClass}">
-                    <span>${product.stock} ${product.unit}</span>
-                    <small>${stockText}</small>
+                    ${product.stock <= 10 ? '<span class="stock-dot" title="Low stock"></span>' : ''}
+                    <span style="font-weight:600">${product.stock} ${product.unit}</span>
+                    <small style="margin-left:8px; opacity:0.75;">${stockText}</small>
                 </div>
             </td>
             <td style="font-weight: 600;">KSh ${totalValue.toLocaleString('en-KE')}</td>
@@ -652,11 +732,35 @@ function updateLowStockList() {
     const list = document.getElementById('lowStockList');
     if (!list) return;
 
-    const lowStock = products.filter(p => p.stock <= 10);
+    const lowStock = products.filter(p => (p.stock ?? p.quantity ?? 0) <= 10);
+
     if (lowStock.length === 0) {
         list.innerHTML = `<div class="no-data"><i class="fas fa-check-circle"></i><p>All stock levels good!</p></div>`;
+        const lowCount = document.getElementById('lowStockCount');
+        if (lowCount) lowCount.textContent = '0';
+        // Keep inventory totals in sync
+        updateInventoryValue();
         return;
     }
+
+    list.innerHTML = '';
+    lowStock.forEach(p => {
+        const div = document.createElement('div');
+
+        list.appendChild(div);
+    });
+
+    // Alert actions
+    list.querySelectorAll('.alert-action').forEach(btn => {
+        btn.addEventListener('click', () => restockProduct(btn.dataset.id));
+    });
+
+    // Update counts
+    const lowCount = document.getElementById('lowStockCount');
+    if (lowCount) lowCount.textContent = lowStock.length;
+
+    // Also update inventory totals when low stock list changes (keeps metrics in sync)
+    updateInventoryValue();
 }
 
 // Check whether the authenticated user has a shop; if not, show CTA to create one
@@ -782,6 +886,21 @@ function updateSalesMetrics(isSalesPage = false) {
         // Specific logic for sales.html metrics if any
         // ...
     }
+}
+
+function updateInventoryValue() {
+    // Calculate grand total using sellPrice * stock (retail value)
+    const totalItems = products.reduce((sum, p) => sum + Number(p.stock || p.quantity || 0), 0);
+    const totalValue = products.reduce((sum, p) => sum + (Number(p.stock || p.quantity || 0) * Number(p.sellPrice || p.selling_price || 0)), 0);
+    const avgPrice = totalItems > 0 ? totalValue / totalItems : 0;
+
+    const valueEl = document.getElementById('inventoryTotalValue');
+    const itemsEl = document.getElementById('inventoryTotalItems');
+    const avgEl = document.getElementById('inventoryAvgPrice');
+
+    if (valueEl) valueEl.textContent = `KSh ${totalValue.toLocaleString('en-KE', { maximumFractionDigits: 2 })}`;
+    if (itemsEl) itemsEl.textContent = totalItems.toString();
+    if (avgEl) avgEl.textContent = `KSh ${avgPrice.toLocaleString('en-KE', { maximumFractionDigits: 2 })}`;
 }
 
 function handleInventorySearch(e) {
@@ -910,6 +1029,7 @@ function handleConfirmDelete(e) {
     populateInventoryTable();
     populateSalesTable(); // If sale referenced it?
     updateLowStockList();
+    updateInventoryValue();
 }
 
 function handleAddShopkeeper(e) {
@@ -953,6 +1073,7 @@ function restockProduct(id) {
         showToast(`Restocked ${p.name}`, 'success');
         updateLowStockList();
         populateInventoryTable();
+        updateInventoryValue();
     }
 }
 

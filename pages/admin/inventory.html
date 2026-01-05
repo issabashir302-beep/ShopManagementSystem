@@ -67,8 +67,8 @@
                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Owner" alt="Owner">
             </div>
             <div class="user-info">
-                <h4 class="user-name">Shop Owner</h4>
-                <span class="user-role">Administrator</span>
+                <h4 class="user-name" id="userName">Shop Owner</h4>
+                <span class="user-role" id="userEmail">owner@example.com</span>
             </div>
             <button class="quick-menu-btn" id="logoutBtn">
                 <i class="fas fa-sign-out-alt"></i>
@@ -152,17 +152,17 @@
                         <div class="metric-card glass">
                             <div class="metric-content">
                                 <div class="metric-header">
-                                    <h3 class="metric-title">Today's Sales</h3>
+                                    <h3 class="metric-title">Inventory Value</h3>
                                 </div>
-                                <div class="metric-value" id="todaySalesValue">KSh 0</div>
+                                <div class="metric-value" id="inventoryTotalValue">KSh 0</div>
                                 <div class="metric-details">
                                     <div class="detail-item">
-                                        <span class="detail-label">Transactions</span>
-                                        <span class="detail-value">0</span>
+                                        <span class="detail-label">Total Items</span>
+                                        <span class="detail-value" id="inventoryTotalItems">0</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Avg. Order</span>
-                                        <span class="detail-value">KSh 0</span>
+                                        <span class="detail-label">Avg. Retail Price</span>
+                                        <span class="detail-value" id="inventoryAvgPrice">KSh 0</span>
                                     </div>
                                 </div>
                             </div>
@@ -183,13 +183,12 @@
                                 <div class="metric-value" id="lowStockCount">0</div>
                                 <div class="metric-details">
                                     <div class="detail-item">
-                                        <span class="detail-label">Restock Now</span>
-                                        <span class="detail-value">0</span>
                                     </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Watch</span>
-                                        <span class="detail-value">0</span>
-                                    </div>
+                                </div>
+
+                                <!-- Low stock list shown when there are low items -->
+                                <div id="lowStockList" class="alerts-list" style="margin-top: 12px; max-height: 200px; overflow: auto;">
+                                    <!-- Populated by JS -->
                                 </div>
                             </div>
                         </div>
@@ -228,7 +227,7 @@
                                             <th>Category</th>
                                             <th>Buy Price</th>
                                             <th>Sell Price</th>
-                                            <th>Stock</th>
+                                            <th>Quantity</th>
                                             <th>Total Value</th>
                                             <th>Actions</th>
                                         </tr>
@@ -278,6 +277,7 @@
     <!-- Mobile Overlay -->
     <div class="mobile-overlay" id="mobileOverlay"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="script.js"></script>
     <!-- Edit Product Modal -->
     <div class="modal" id="editModal"

@@ -1,0 +1,96 @@
+{
+  "info": {
+    "name": "ShopManagement - Batch Add Products",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Batch Add 10 Products (pre-request script)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/inventory",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "inventory"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Batch add 10 products via pm.sendRequest",
+              "const baseUrl = pm.environment.get('baseUrl') || pm.globals.get('baseUrl') || 'http://localhost:5000';",
+              "const token = pm.environment.get('access_token') || pm.globals.get('access_token');",
+              "const shopId = pm.environment.get('shop_id') || pm.globals.get('shop_id');",
+              "const products = [",
+              "  { product_name: 'Sunflower Oil 1L', sku: 'OIL-001', category: 'Oil', quantity: 25, unit: 'l', buying_price: 180, selling_price: 220, supplier: 'Local' },",
+              "  { product_name: 'Maize Flour 2kg', sku: 'FLR-002', category: 'Grains', quantity: 40, unit: 'packet', buying_price: 120, selling_price: 150, supplier: 'Millers' },",
+              "  { product_name: 'Sugar 1kg', sku: 'SUG-003', category: 'Sugar', quantity: 60, unit: 'kg', buying_price: 110, selling_price: 140, supplier: 'Mumias' },",
+              "  { product_name: 'Salt 1kg', sku: 'SLT-004', category: 'Condiments', quantity: 80, unit: 'kg', buying_price: 30, selling_price: 50, supplier: 'SaltCo' },",
+              "  { product_name: 'Tea 250g', sku: 'TEA-005', category: 'Beverages', quantity: 50, unit: 'g', buying_price: 85, selling_price: 120, supplier: 'Kericho' },",
+              "  { product_name: 'Bread Loaf', sku: 'BRD-006', category: 'Bakery', quantity: 30, unit: 'piece', buying_price: 40, selling_price: 60, supplier: 'Bakery' },",
+              "  { product_name: 'Canned Beans 400g', sku: 'CBN-007', category: 'Canned', quantity: 45, unit: 'can', buying_price: 90, selling_price: 120, supplier: 'Canner' },",
+              "  { product_name: 'Cooking Salt 500g', sku: 'CSL-008', category: 'Seasoning', quantity: 70, unit: 'packet', buying_price: 25, selling_price: 45, supplier: 'SpiceCo' },",
+              "  { product_name: 'Soda 500ml', sku: 'SOD-009', category: 'Beverages', quantity: 40, unit: 'ml', buying_price: 55, selling_price: 80, supplier: 'DrinkCo' },",
+              "  { product_name: 'Bar Soap', sku: 'SOAP-010', category: 'Cleaning', quantity: 90, unit: 'piece', buying_price: 35, selling_price: 55, supplier: 'CleanCorp' }",
+              "];",
+              "",
+              "if (!token) {",
+              "  console.log('Missing access_token in environment. Aborting batch.');",
+              "}",
+              "",
+              "let completed = 0;",
+              "const results = [];",
+              "",
+              "products.forEach((p, idx) => {",
+              "  const body = Object.assign({}, p);",
+              "  if (shopId) body.shop_id = shopId;",
+              "",
+              "  pm.sendRequest({",
+              "    url: baseUrl + '/api/inventory',",
+              "    method: 'POST',",
+              "    header: {",
+              "      'Content-Type': 'application/json',",
+              "      'Authorization': 'Bearer ' + token",
+              "    },",
+              "    body: { mode: 'raw', raw: JSON.stringify(body) }",
+              "  }, function (err, res) {",
+              "    results.push({ index: idx + 1, error: err ? err.message : null, status: res ? res.code : 'no-response', body: res && res.json ? res.json() : null });",
+              "    completed++;",
+              "    console.log('Batch add result', results[results.length - 1]);",
+              "    if (completed === products.length) {",
+              "      pm.environment.set('batch_add_results', JSON.stringify(results));",
+              "      console.log('Batch add complete. Results saved to environment variable: batch_add_results');",
+              "    }",
+              "  });",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    }
+  ]
+}

@@ -103,7 +103,10 @@ export const getMe = async (req, res) => {
       profile.shop_id = null
     }
 
-    res.json(data)
+    // Always include the user's email from the auth object if present
+    profile.email = user?.email || null
+
+    res.json(profile)
   } catch (err) {
     console.error('getMe: unexpected error:', err)
     res.status(500).json({ error: 'Internal server error' })

@@ -84,6 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // Shopkeeper inventory: fetch and wire search
+    if (document.getElementById('inventoryTable')) {
+        fetchProductsForShopkeeper();
+        const searchInv = document.getElementById('search_inventory');
+        if (searchInv) searchInv.addEventListener('input', (e) => renderInventoryTable(e.target.value));
+    }
 });
 
 function initPOS() {
@@ -251,6 +258,83 @@ function renderCart() {
 
     totalEl.textContent = `KSh ${total.toLocaleString()}`;
     checkoutBtn.disabled = false;
+}
+
+// ===== New: Fetch products from backend and render inventory table for shopkeepers =====
+async function fetchProductsForShopkeeper() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('http://localhost:5000/api/inventory', {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Failed to fetch products' }));
+            throw new Error(err.error || err.message || 'Failed to load products');
+        }
+
+        const data = await res.json();
+        // Normalize to expected local product shape
+        products = data.map(p => ({
+            id: p.id,
+            name: p.name || p.product_name || '',
+            sku: p.sku || p.code || '',
+            category: p.category || '',
+            price: Number(p.selling_price ?? p.sellPrice ?? p.sell_price ?? 0),
+            stock: Number(p.quantity ?? p.stock ?? 0),
+            unit: p.unit || '',
+            supplier: p.supplier || ''
+        }));
+
+        renderInventoryTable();
+        renderGrid(); // update POS grid too if present
+    } catch (err) {
+        console.error('fetchProductsForShopkeeper error:', err);
+        showToast(err.message || 'Failed to load products', 'error');
+    }
+}
+
+function renderInventoryTable(searchTerm = '') {
+    const tbody = document.getElementById('inventoryTable');
+    if (!tbody) return;
+
+    const term = (searchTerm || '').toLowerCase();
+    const filtered = products.filter(p => {
+        return (!term) || p.name.toLowerCase().includes(term) || (p.sku || '').toLowerCase().includes(term);
+    });
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-tertiary); padding: 20px;">No products available</td></tr>`;
+        return;
+    }
+
+    filtered.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <div style="font-weight: 600;">${p.name}</div>
+                <div style="font-size:0.85rem; color: var(--text-tertiary);">${p.supplier || ''}</div>
+            </td>
+            <td>${p.sku}</td>
+            <td>${p.category}</td>
+            <td style="font-weight:700;">KSh ${Number(p.price).toLocaleString('en-KE')}</td>
+            <td>${p.stock}</td>
+            <td>
+                <button class="primary-btn" ${p.stock <= 0 ? 'disabled' : ''} onclick="addToCart(${p.id})">Add to Cart</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Wire the refresh button for inventory (optional)
+const refreshSalesBtn = document.getElementById('refreshSalesBtn');
+if (refreshSalesBtn) {
+    refreshSalesBtn.addEventListener('click', async () => {
+        await fetchProductsForShopkeeper();
+        showToast('Inventory refreshed', 'success');
+    });
 }
 
 // ===== PAYMENT Logic =====
