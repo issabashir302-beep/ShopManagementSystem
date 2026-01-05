@@ -5,6 +5,7 @@ import morgan from 'morgan'
 import authRoutes from './routes/authRoutes.js'
 import inventoryRoutes from './routes/inventoryRoutes.js'
 import salesRoutes from './routes/salesRoutes.js'
+import shopRoutes from './routes/shopRoutes.js'
 
 const app = express()
 
@@ -17,6 +18,7 @@ app.use(express.json())
 app.use('/api/auth', authRoutes)
 app.use('/api/inventory', inventoryRoutes)
 app.use('/api/sales', salesRoutes)
+app.use('/api/shops', shopRoutes)
 
 // Health check route
 app.get('/api/health', (req, res) => {

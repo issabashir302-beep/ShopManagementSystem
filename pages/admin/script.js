@@ -227,6 +227,9 @@ function initializeOverview() {
     // Low Stock Alerts (Since owner.html has edit/delete modals, we can enable actions)
     updateLowStockList();
 
+    // Check whether the user has a shop; if not show create shop CTA
+    checkShop()
+
     // Stats
     const totalProductsEl = document.getElementById('totalProducts');
     if (totalProductsEl) totalProductsEl.textContent = products.length;
@@ -380,20 +383,16 @@ async function handleAddProduct(e) {
         return;
     }
 
-    // Payload matching Supabase/Backend expectatons (snake_case)
+    // Payload matching Supabase/Backend expectations (snake_case)
     const payload = {
-        product_name: name,     // Backend likely expects snake_case or we map it
+        product_name: name,
         sku: sku,
         category: category,
         stock: stock,
         unit: unit,
         buying_price: buyPrice,
         selling_price: sellPrice,
-        supplier: supplier,
-        // Include camelCase just in case some legacy part needs it, but backend is primary
-        name: name,
-        buyPrice: buyPrice,
-        sellPrice: sellPrice
+        supplier: supplier
     };
 
     const accessToken = localStorage.getItem('access_token');
@@ -658,7 +657,92 @@ function updateLowStockList() {
         list.innerHTML = `<div class="no-data"><i class="fas fa-check-circle"></i><p>All stock levels good!</p></div>`;
         return;
     }
+}
 
+// Check whether the authenticated user has a shop; if not, show CTA to create one
+async function checkShop() {
+    const notice = document.getElementById('shopNotice');
+    const openBtn = document.getElementById('openCreateShop');
+    const modal = document.getElementById('createShopModal');
+    const closeBtn = document.getElementById('closeCreateShop');
+    const cancelBtn = document.getElementById('cancelCreateShop');
+    const form = document.getElementById('createShopForm');
+
+    if (!notice || !openBtn || !modal || !closeBtn || !cancelBtn || !form) return;
+
+    openBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+    });
+
+    closeBtn.addEventListener('click', () => modal.style.display = 'none');
+    cancelBtn.addEventListener('click', () => modal.style.display = 'none');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const name = form.name.value.trim();
+        const address = form.address.value.trim();
+
+        if (!name) return showToast('Shop name required', 'error');
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        }
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const res = await fetch('http://localhost:5000/api/shops', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ name, address })
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ message: 'Failed to create shop' }));
+                throw new Error(err.error || err.message || 'Failed to create shop');
+            }
+
+            const data = await res.json();
+            showToast('Shop created', 'success');
+            modal.style.display = 'none';
+            form.reset();
+
+            // Now the user has a shop - re-fetch products if needed
+            await fetchProductsFromServer();
+            notice.style.display = 'none';
+        } catch (err) {
+            console.error('Create shop error:', err);
+            showToast(err.message || 'Failed to create shop', 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Create Shop';
+            }
+        }
+    });
+
+    // Initial check
+    try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('http://localhost:5000/api/shops/me', {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+
+        if (res.ok) {
+            notice.style.display = 'none';
+        } else {
+            // No shop - show CTA
+            notice.style.display = '';
+        }
+    } catch (err) {
+        console.error('checkShop:', err);
+        // Don't block the experience if the check fails
+    }
+}
     list.innerHTML = '';
     lowStock.forEach(p => {
         const div = document.createElement('div');
@@ -685,7 +769,7 @@ function updateLowStockList() {
     // Update counts
     const lowCount = document.getElementById('lowStockCount');
     if (lowCount) lowCount.textContent = lowStock.length;
-}
+
 
 function updateSalesMetrics(isSalesPage = false) {
     // Shared Metrics
@@ -709,10 +793,56 @@ function handleInventorySearch(e) {
     });
 }
 
-function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        showToast('Logging out...', 'info');
-        // Redirect to login
+async function handleLogout() {
+    if (!confirm('Are you sure you want to logout?')) return;
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.disabled = true;
+        logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+    }
+
+    const accessToken = localStorage.getItem('access_token');
+
+    try {
+        if (accessToken) {
+            const res = await fetch('http://localhost:5000/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+
+            if (!res.ok) {
+                // If token already expired/invalid, treat as logged out locally
+                if (res.status === 401) {
+                    localStorage.removeItem('access_token');
+                    showToast('Session expired', 'info');
+                    setTimeout(() => window.location.href = '/pages/auth/login.html', 500);
+                    return;
+                }
+                const err = await res.json().catch(() => ({ message: 'Logout failed' }));
+                throw new Error(err.error || err.message || 'Failed to logout');
+            }
+        }
+
+        // Clear local session and redirect to login
+        localStorage.removeItem('access_token');
+        showToast('Logged out', 'success');
+
+        // small delay so toast is visible, then redirect
+        setTimeout(() => {
+            window.location.href = '/pages/auth/login.html';
+        }, 500);
+
+    } catch (err) {
+        console.error('Logout error:', err);
+        showToast(err.message || 'Logout failed', 'error');
+    } finally {
+        if (logoutBtn) {
+            logoutBtn.disabled = false;
+            logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+        }
     }
 }
 

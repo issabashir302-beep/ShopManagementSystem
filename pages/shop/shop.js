@@ -43,8 +43,46 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('checkoutBtn').addEventListener('click', () => processPayment('Cash')); // Default
 
     // Logout
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        if (confirm('End Shift and Logout?')) window.location.href = '../../public/login.html';
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        if (!confirm('End Shift and Logout?')) return;
+
+        const btn = document.getElementById('logoutBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+        }
+
+        const token = localStorage.getItem('access_token');
+        try {
+            if (token) {
+                const res = await fetch('http://localhost:5000/api/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        localStorage.removeItem('access_token');
+                        showToast('Session expired', 'info');
+                        setTimeout(() => window.location.href = '/pages/auth/login.html', 500);
+                        return;
+                    }
+                    const err = await res.json().catch(() => ({ message: 'Logout failed' }));
+                    throw new Error(err.error || err.message || 'Failed to logout');
+                }
+            }
+
+            localStorage.removeItem('access_token');
+            showToast('Logged out', 'success');
+            setTimeout(() => window.location.href = '/pages/auth/login.html', 500);
+        } catch (err) {
+            console.error('Logout error:', err);
+            showToast(err.message || 'Logout failed', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = 'Logout';
+            }
+        }
     });
 });
 

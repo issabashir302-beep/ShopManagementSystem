@@ -34,6 +34,26 @@ export const login = async (req, res) => {
   res.json(data)
 }
 
+export const logout = async (req, res) => {
+  // This endpoint signs the user out using the request-scoped Supabase client
+  try {
+    const { supabase } = req
+
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      console.error('logout: supabase error:', error)
+      return res.status(400).json({ error: error.message || error })
+    }
+
+    res.json({ message: 'Logged out' })
+  } catch (err) {
+    console.error('logout: unexpected error:', err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+
 // authController.js
 export const getMe = async (req, res) => {
   const { supabase, user } = req
@@ -44,9 +64,10 @@ export const getMe = async (req, res) => {
     // Use maybeSingle() to avoid the "Cannot coerce the result to a single JSON object" when
     // the result set is empty. If multiple matching rows exist, Supabase will still return an error
     // which we log and surface cleanly.
+    // Fetch basic profile fields (avoid selecting shop_id which may not exist on users table)
     const { data, error } = await supabase
       .from('users')
-      .select('id, full_name, role')
+      .select('id, full_name, role, phone')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -55,16 +76,31 @@ export const getMe = async (req, res) => {
       return res.status(500).json({ error: error.message })
     }
 
-    if (!data) {
+    let profile = data
+
+    if (!profile) {
       console.warn('getMe: profile not found in users table for id:', user.id)
-      // Return a minimal fallback so the client can determine next steps (e.g., profile setup)
-      const fallback = {
+      profile = {
         id: user.id,
         full_name: user.user_metadata?.full_name || user.email || null,
         role: null,
         profileMissing: true
       }
-      return res.json(fallback)
+    }
+
+    // Find a shop owned by this user (if any) and expose shop_id in the response
+    try {
+      const { data: shop, error: shopErr } = await supabase
+        .from('shops')
+        .select('id')
+        .eq('owner_id', user.id)
+        .maybeSingle()
+
+      if (!shopErr && shop) profile.shop_id = shop.id
+      else profile.shop_id = null
+    } catch (err) {
+      console.warn('getMe: failed to lookup shop by owner_id', err)
+      profile.shop_id = null
     }
 
     res.json(data)
