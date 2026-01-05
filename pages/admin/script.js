@@ -263,7 +263,8 @@ function initializeOverview() {
 // ===== INVENTORY PAGE INITIALIZATION =====
 function initializeInventory() {
     console.log('Initializing Inventory Management...');
-    populateInventoryTable();
+    // Load products from server (falls back to demo data if unauthenticated)
+    fetchProductsFromServer();
 
     // Inventory Actions
     const refreshBtn = document.getElementById('refreshInventory');
@@ -358,29 +359,111 @@ function switchTrackerTab(clickedTab) {
     if (activeContent) activeContent.classList.add('active');
 }
 
-function handleAddProduct(e) {
+async function handleAddProduct(e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const productData = {
-        id: products.length + 1,
-        name: formData.get('productName'),
-        sku: formData.get('sku'),
-        category: formData.get('category'),
-        stock: parseInt(formData.get('stock')),
-        unit: formData.get('unit'),
-        buyPrice: parseFloat(formData.get('buyPrice')),
-        sellPrice: parseFloat(formData.get('sellPrice')),
-        supplier: formData.get('supplier') || 'Not specified',
+    const form = e.target;
+    const name = form.productName.value.trim();
+    const sku = form.sku.value.trim();
+    const category = form.category?.value || null;
+    const stock = Number(form.stock.value || 0);
+    const unit = form.unit.value;
+    const buyPrice = parseFloat(form.buyPrice.value || 0);
+    const sellPrice = parseFloat(form.sellPrice.value || 0);
+    const supplier = form.supplier?.value || 'Not specified';
+
+    if (!name || !sku || !unit) {
+        alert('Please fill required fields (Product Name, SKU, Unit)');
+        return;
+    }
+
+    const payload = {
+        name,
+        sku,
+        category,
+        stock,
+        unit,
+        buyPrice,
+        sellPrice,
+        buying_price: buyPrice,
+        selling_price: sellPrice,
+        supplier,
         sales: 0
     };
 
-    products.push(productData);
-    e.target.reset();
-    showToast(`Product "${productData.name}" added successfully!`, 'success');
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+        alert('You must be logged in to add products.');
+        return;
+    }
 
-    // Refresh UI if necessary
-    const totalProducts = document.getElementById('totalProducts');
-    if (totalProducts) totalProducts.textContent = products.length;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn && (submitBtn.disabled = true);
+
+    try {
+        const res = await fetch('http://localhost:5000/api/inventory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error?.message || data.error || JSON.stringify(data));
+        }
+
+        showToast(`Product "${name}" added successfully!`, 'success');
+        form.reset();
+
+        // Refresh products list from server
+        await fetchProductsFromServer();
+
+    } catch (err) {
+        console.error(err);
+        alert('Failed to add product: ' + err.message);
+    } finally {
+        submitBtn && (submitBtn.disabled = false);
+    }
+}
+
+async function fetchProductsFromServer() {
+    try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('http://localhost:5000/api/inventory', {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Failed to fetch products' }));
+            throw new Error(err.error?.message || err.message || JSON.stringify(err));
+        }
+
+        const data = await res.json();
+        products = data.map(p => ({
+            id: p.id,
+            name: p.name || p.product_name || '',
+            sku: p.sku || p.code || '',
+            category: p.category || '',
+            stock: Number(p.stock || 0),
+            unit: p.unit || '',
+            buyPrice: Number(p.buyPrice ?? p.buying_price ?? p.buy_price ?? 0),
+            sellPrice: Number(p.sellPrice ?? p.selling_price ?? p.sell_price ?? 0),
+            supplier: p.supplier || '',
+            sales: Number(p.sales || 0)
+        }));
+
+        populateInventoryTable();
+
+        const totalProducts = document.getElementById('totalProducts');
+        if (totalProducts) totalProducts.textContent = products.length;
+    } catch (err) {
+        console.error(err);
+        showToast('Failed to load products from server', 'error');
+    }
 }
 
 function populateTrackerTables() {

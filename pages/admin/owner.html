@@ -388,6 +388,55 @@
     </div>
 
     </div>
+
+
+<script>
+document.getElementById("addProductForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+
+    const productData = {
+        name: form.productName.value.trim(),
+        sku: form.sku.value.trim(),
+        stock: Number(form.stock.value),
+        unit: form.unit.value,
+        buying_price: Number(form.buyPrice.value),
+        selling_price: Number(form.sellPrice.value)
+    };
+
+    try {
+        const res = await fetch("http://localhost:5000/api/products", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                // supabase Bearer token if needed:
+                "Authorization": `Bearer ${localStorage.getItem("supabase_token")}`
+                // "Authorization": `Bearer ${localStorage.getItem("token")}`
+            },
+            credentials: "include", // IMPORTANT if using cookies/supabase auth
+            body: JSON.stringify(productData)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || "Failed to add product");
+        }
+
+        alert("✅ Product added successfully");
+        form.reset();
+
+        // Optional: reload products table
+        // loadProducts();
+
+    } catch (err) {
+        console.error(err);
+        alert("❌ " + err.message);
+    }
+});
+</script>
+
 </body>
 
 </html>
