@@ -9,6 +9,12 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+        .page-buttons .pagination-number-btn { margin:0 4px; padding:4px 8px; border-radius:4px; border:1px solid rgba(0,0,0,0.06); background:transparent; cursor:pointer; font-size:0.9rem; }
+        .page-buttons .pagination-number-btn.active { background: #0b5cff; color: #fff; border-color: #0b5cff; }
+        .page-buttons .pagination-ellipsis { color: rgba(13, 46, 83, 0.6); }
+    </style>
 </head>
 
 <body>
@@ -93,6 +99,22 @@
                             <!-- Filled by JavaScript -->
                         </tbody>
                     </table>
+                </div>
+
+                <div class="table-footer">
+                    <div class="pagination">
+                        <button class="pagination-btn prev" id="inventoryPrev">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="pagination-info" id="inventoryPagination">0-0 of 0</span>
+
+                        <!-- Numeric page buttons inserted here -->
+                        <div id="inventoryPageButtons" class="page-buttons" style="display:inline-block; margin-left:12px;"></div>
+
+                        <button class="pagination-btn next" id="inventoryNext">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="sales-section"
@@ -190,6 +212,97 @@
 
     <!-- Scripts -->
 
+<script>
+  // Load products via backend (uses server-side auth + RLS). Limits to 7 items.
+  async function loadInventoryTable() {
+    const tbody = document.getElementById("inventoryTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="8">Loading...</td></tr>`;
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch('http://localhost:5000/api/inventory', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Failed to load products' }));
+        console.error('loadInventoryTable fetch failed:', err);
+        tbody.innerHTML = `<tr><td colspan="8">Failed to load products.</td></tr>`;
+        return;
+      }
+
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8">No products found.</td></tr>`;
+        return;
+      }
+
+      const toDisplay = data.slice(0, 7);
+
+      tbody.innerHTML = toDisplay.map((p) => {
+        const buy = Number(p.buying_price ?? p.buy_price ?? p.buyPrice ?? 0);
+        const sell = Number(p.selling_price ?? p.sell_price ?? p.sellPrice ?? p.price ?? 0);
+        const qty = Number(p.quantity ?? p.stock ?? 0);
+        const totalValue = sell * qty;
+
+        return `
+          <tr>
+            <td>${escapeHtml(p.name ?? "-")}</td>
+            <td>${escapeHtml(p.sku ?? "-")}</td>
+            <td>${escapeHtml(p.category ?? "-")}</td>
+            <td>${formatKES(buy)}</td>
+            <td>${formatKES(sell)}</td>
+            <td>${qty}</td>
+            <td>${formatKES(totalValue)}</td>
+            <td>
+              <button class="btn-edit" data-id="${p.id}">Edit</button>
+              <button class="btn-delete" data-id="${p.id}">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      // Hook up actions (event delegation)
+      tbody.querySelectorAll('.btn-edit, .btn-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.dataset.id;
+          if (e.currentTarget.classList.contains('btn-edit')) {
+            console.log('Edit clicked', id);
+          } else {
+            console.log('Delete clicked', id);
+          }
+        });
+      });
+
+    } catch (err) {
+      console.error('loadInventoryTable error:', err);
+      tbody.innerHTML = `<tr><td colspan="8">Failed to load products.</td></tr>`;
+    }
+  }
+
+  // Run automatically once DOM is ready and after auth check sets token
+  document.addEventListener("DOMContentLoaded", () => {
+    // small delay ensures auth guard (which may redirect) runs first
+    setTimeout(loadInventoryTable, 0);
+  });
+
+  // Helpers
+  function formatKES(value) {
+    return `KSh ${Number(value || 0).toLocaleString('en-KE')}`;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (m) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    }[m]));
+  }
+</script>
+
     <!-- Authentication guard: ensure only logged-in users can access this page -->
     <script>
         (async () => {
@@ -271,11 +384,13 @@
             }
         })();
     </script>
+<!-- Supabase JS (v2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <!-- Shop logic: fetches and renders shop inventory for shopkeepers -->
-    <script src="shop.js"></script>
+    
     <script src="js/utils.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/cart.js"></script>

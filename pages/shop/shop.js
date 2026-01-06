@@ -1,7 +1,12 @@
 
 
+let products = [];
 let cart = [];
 let currentFilter = 'all';
+
+// Pagination for inventory table
+let inventoryPage = 1;
+const inventoryPageSize = 7;
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -82,9 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Shopkeeper inventory: fetch and wire search
     if (document.getElementById('inventoryTable')) {
+        // initial load
+        inventoryPage = 1;
         fetchProductsForShopkeeper();
+
         const searchInv = document.getElementById('search_inventory');
-        if (searchInv) searchInv.addEventListener('input', (e) => renderInventoryTable(e.target.value));
+        if (searchInv) searchInv.addEventListener('input', (e) => {
+            inventoryPage = 1; // reset to first page on search
+            renderInventoryTable(e.target.value);
+        });
+
+        // pagination controls
+        const prevBtn = document.getElementById('inventoryPrev');
+        const nextBtn = document.getElementById('inventoryNext');
+        if (prevBtn) prevBtn.addEventListener('click', () => { if (inventoryPage > 1) { inventoryPage--; renderInventoryTable(); } });
+        if (nextBtn) nextBtn.addEventListener('click', () => { inventoryPage++; renderInventoryTable(); });
     }
 });
 
@@ -282,6 +299,7 @@ async function fetchProductsForShopkeeper() {
             supplier: p.supplier || ''
         }));
 
+        inventoryPage = 1; // reset pagination on fresh load
         renderInventoryTable();
         renderGrid(); // update POS grid too if present
     } catch (err) {
@@ -305,10 +323,29 @@ function renderInventoryTable(searchTerm = '') {
         // determine column count
         const colCount = 8;
         tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color: var(--text-tertiary); padding: 20px;">No products available</td></tr>`;
+        // update pagination UI
+        const pageInfoEl = document.getElementById('inventoryPagination');
+        const prevBtn = document.getElementById('inventoryPrev');
+        const nextBtn = document.getElementById('inventoryNext');
+        if (pageInfoEl) pageInfoEl.textContent = `0-0 of 0`;
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        const btnContainer = document.getElementById('inventoryPageButtons');
+        if (btnContainer) btnContainer.innerHTML = '';
         return;
     }
 
-    filtered.forEach(p => {
+    // Apply pagination
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / inventoryPageSize));
+    if (inventoryPage > totalPages) inventoryPage = totalPages;
+
+    const startIdx = (inventoryPage - 1) * inventoryPageSize;
+    const endIdx = Math.min(startIdx + inventoryPageSize, total);
+
+    const toDisplay = filtered.slice(startIdx, endIdx);
+
+    toDisplay.forEach(p => {
         const tr = document.createElement('tr');
 
         const totalValue = Number((p.price || 0) * (p.stock || 0));
@@ -331,12 +368,73 @@ function renderInventoryTable(searchTerm = '') {
 
         tbody.appendChild(tr);
     });
+
+    // Update pagination UI if present
+    const pageInfoEl = document.getElementById('inventoryPagination');
+    const prevBtn = document.getElementById('inventoryPrev');
+    const nextBtn = document.getElementById('inventoryNext');
+    if (pageInfoEl) pageInfoEl.textContent = `${startIdx + 1}-${endIdx} of ${total}`;
+    if (prevBtn) prevBtn.disabled = inventoryPage <= 1;
+    if (nextBtn) nextBtn.disabled = inventoryPage >= totalPages;
+
+    // Render numeric page buttons (if container exists)
+    renderPageButtons(totalPages);
+}
+
+function renderPageButtons(totalPages) {
+    const container = document.getElementById('inventoryPageButtons');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const maxButtons = 7;
+
+    const addBtn = (i) => {
+        const btn = document.createElement('button');
+        btn.className = 'pagination-number-btn';
+        if (i === inventoryPage) btn.classList.add('active');
+        btn.textContent = i;
+        btn.addEventListener('click', () => {
+            if (i === inventoryPage) return;
+            inventoryPage = i;
+            renderInventoryTable();
+        });
+        container.appendChild(btn);
+    };
+
+    const addEllipsis = () => {
+        const span = document.createElement('span');
+        span.className = 'pagination-ellipsis';
+        span.textContent = '...';
+        span.style.margin = '0 6px';
+        container.appendChild(span);
+    };
+
+    if (totalPages <= maxButtons) {
+        for (let i = 1; i <= totalPages; i++) addBtn(i);
+        return;
+    }
+
+    // show first page, windowed middle, and last page
+    const delta = Math.floor((maxButtons - 3) / 2); // pages around current
+    let start = Math.max(2, inventoryPage - delta);
+    let end = Math.min(totalPages - 1, inventoryPage + delta);
+
+    // expand range when close to edges
+    if (inventoryPage - start < delta) end = Math.min(totalPages - 1, start + (maxButtons - 3));
+    if (end - start < (maxButtons - 3)) start = Math.max(2, end - (maxButtons - 3));
+
+    addBtn(1);
+    if (start > 2) addEllipsis();
+    for (let i = start; i <= end; i++) addBtn(i);
+    if (end < totalPages - 1) addEllipsis();
+    addBtn(totalPages);
 }
 
 // Wire the refresh button for inventory (optional)
 const refreshSalesBtn = document.getElementById('refreshSalesBtn');
 if (refreshSalesBtn) {
     refreshSalesBtn.addEventListener('click', async () => {
+        inventoryPage = 1;
         await fetchProductsForShopkeeper();
         showToast('Inventory refreshed', 'success');
     });
