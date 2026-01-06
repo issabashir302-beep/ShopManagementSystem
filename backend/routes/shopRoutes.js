@@ -1,6 +1,6 @@
 import express from 'express'
 import { requireAuth } from '../middleware/authMiddleware.js'
-import { createShop, getShopDetails, inviteShopkeeper, addShopkeeper, getShopkeepers } from '../controllers/shopController.js'
+import { createShop, getShopDetails, inviteShopkeeper, addShopkeeper, getShopkeepers, updateShopkeeper, toggleShopkeeperStatus, resetShopkeeperPassword } from '../controllers/shopController.js'
 
 const router = express.Router()
 
@@ -18,5 +18,14 @@ router.post('/shopkeepers', requireAuth, addShopkeeper)
 
 // Get all shopkeepers for the owner's shop
 router.get('/shopkeepers', requireAuth, getShopkeepers)
+
+// Update shopkeeper profile (name, phone)
+router.patch('/shopkeepers/:id', requireAuth, updateShopkeeper)
+
+// Toggle status (disabled)
+router.patch('/shopkeepers/:id/status', requireAuth, toggleShopkeeperStatus)
+
+// Reset password (returns new temp password)
+router.post('/shopkeepers/:id/reset-password', requireAuth, resetShopkeeperPassword)
 
 export default router

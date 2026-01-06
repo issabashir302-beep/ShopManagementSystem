@@ -75,21 +75,25 @@
             </div>
 
             <div class="inventory-table-wrapper">
-                <table class="inventory-table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>SKU</th>
-                            <th>Category</th>
-                            <th>Selling Price (KSH)</th>
-                            <th>Stock</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventoryTable">
-                        <!-- Filled by JavaScript -->
-                    </tbody>
-                </table>
+                <div class="table-container">
+                    <table class="sales-table" id="inventoryTable">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Category</th>
+                                <th>Buy Price</th>
+                                <th>Sell Price</th>
+                                <th>Quantity</th>
+                                <th>Total Value</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <!-- Filled by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="sales-section"
                 style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
@@ -185,8 +189,93 @@
     </div>
 
     <!-- Scripts -->
+
+    <!-- Authentication guard: ensure only logged-in users can access this page -->
+    <script>
+        (async () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                // No token -> redirect to login
+                window.location.href = '/pages/auth/login.html';
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:5000/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    // Invalid or expired token -> clear and redirect
+                    localStorage.removeItem('access_token');
+                    window.location.href = '/pages/auth/login.html';
+                    return;
+                }
+
+                // Make authenticated user available to other scripts on the page
+                window.currentUser = await res.json();
+
+                // Wire logout button (shopkeeper view may not include the global shop.js)
+                const setupLogout = () => {
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    if (!logoutBtn) return;
+
+                    logoutBtn.addEventListener('click', async () => {
+                        if (!confirm('End Shift and Logout?')) return;
+
+                        const btn = logoutBtn;
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+
+                        const token = localStorage.getItem('access_token');
+                        try {
+                            if (token) {
+                                const r = await fetch('http://localhost:5000/api/auth/logout', {
+                                    method: 'POST',
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                });
+
+                                if (!r.ok) {
+                                    if (r.status === 401) {
+                                        localStorage.removeItem('access_token');
+                                        if (typeof showToast === 'function') showToast('Session expired', 'info'); else alert('Session expired');
+                                        setTimeout(() => window.location.href = '/pages/auth/login.html', 500);
+                                        return;
+                                    }
+
+                                    const e = await r.json().catch(() => ({ message: 'Logout failed' }));
+                                    throw new Error(e.error || e.message || 'Failed to logout');
+                                }
+                            }
+
+                            localStorage.removeItem('access_token');
+                            if (typeof showToast === 'function') showToast('Logged out', 'success'); else alert('Logged out');
+                            setTimeout(() => window.location.href = '/pages/auth/login.html', 500);
+                        } catch (err) {
+                            console.error('Logout error:', err);
+                            if (typeof showToast === 'function') showToast(err.message || 'Logout failed', 'error'); else alert(err.message || 'Logout failed');
+                        } finally {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fas fa-right-from-bracket"></i> Logout';
+                        }
+                    });
+                };
+
+                // Small delay to ensure DOM is ready (script is at bottom but be safe)
+                setTimeout(setupLogout, 0);
+
+            } catch (err) {
+                console.error('Auth check failed:', err);
+                localStorage.removeItem('access_token');
+                window.location.href = '/pages/auth/login.html';
+            }
+        })();
+    </script>
+
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
+    <!-- Shop logic: fetches and renders shop inventory for shopkeepers -->
+    <script src="shop.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/cart.js"></script>

@@ -321,6 +321,10 @@ function initializeShopkeepers() {
 
     const addForm = document.getElementById('addShopkeeperForm');
     if (addForm) addForm.addEventListener('submit', handleAddShopkeeper);
+
+    // Edit form (modal exists after script include so attach here)
+    const editForm = document.getElementById('editShopkeeperForm');
+    if (editForm) editForm.addEventListener('submit', handleEditShopkeeper);
 }
 
 // ===== HELPER FUNCTIONS =====
@@ -703,49 +707,75 @@ function populateSalesTable() {
 
 async function populateShopkeepersTable() {
     const tbody = document.getElementById('shopkeepersTableBody');
+    const note = document.getElementById('shopkeepersNote');
     if (!tbody) return;
 
+    if (note) note.textContent = '';
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
 
     try {
         const token = localStorage.getItem('access_token');
-        if (!token) return;
+        if (!token) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-secondary);">Not authenticated. Please login to view shopkeepers.</td></tr>';
+            return;
+        }
 
         const res = await fetch('http://localhost:5000/api/shops/shopkeepers', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (!res.ok) {
-            // fallback to empty or local demo data if needed, but best to show empty
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No shopkeepers found.</td></tr>';
             return;
         }
 
-        const data = await res.json();
+        const payload = await res.json();
+        let data = [];
+        let source = 'unknown';
 
-        // Update local state if we want (optional)
+        // Support both legacy array response and new object shape { shopkeepers, source }
+        if (Array.isArray(payload)) {
+            data = payload;
+            source = 'legacy';
+        } else if (payload && Array.isArray(payload.shopkeepers)) {
+            data = payload.shopkeepers;
+            source = payload.source || 'unknown';
+        }
+
+        // Update local state
         shopkeepers = data;
 
         tbody.innerHTML = '';
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No shopkeepers found.</td></tr>';
             return;
         }
 
+        // Show a small note if this is a global list (no per-shop mapping)
+        if (note) {
+            if (source === 'global') note.textContent = 'Showing all users with role "shopkeeper" (no per-shop mapping found).';
+            else if (source === 'mapping') note.textContent = 'Showing shopkeepers via shop_staff mapping.';
+            else if (source === 'shop') note.textContent = 'Showing shopkeepers for your shop.';
+            else note.textContent = '';
+        }
+
         data.forEach(sk => {
+            const disabled = Boolean(sk.disabled || sk.is_disabled || sk.blocked || false);
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>
                     <div style="font-weight: 500;">${sk.full_name || sk.name || 'Unknown'}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-tertiary);">${sk.email}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-tertiary);">${sk.email || '-'}</div>
                 </td>
                 <td>${sk.phone || '-'}</td>
                 <td><span class="badge badge-blue">${sk.role || 'Shopkeeper'}</span></td>
-                <td><span class="status-pill active">Active</span></td>
+                <td><span class="status-pill ${disabled ? 'inactive' : 'active'}">${disabled ? 'Inactive' : 'Active'}</span></td>
                 <td>${new Date(sk.created_at || Date.now()).toLocaleDateString()}</td>
                 <td>
                     <div class="action-buttons">
-                        <button class="action-btn delete" onclick="alert('Delete not implemented yet')"><i class="fas fa-trash"></i></button>
+                        <button class="action-btn" title="Reset password" onclick="resetPasswordForShopkeeper('${sk.id}')"><i class="fas fa-key"></i></button>
+                        <button class="action-btn" title="Edit" onclick="openEditShopkeeper('${sk.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn" title="Toggle active" onclick="toggleShopkeeperStatus('${sk.id}', ${disabled})"><i class="fas ${disabled ? 'fa-user-slash' : 'fa-user-check'}"></i></button>
                     </div>
                 </td>
             `;
@@ -1069,8 +1099,8 @@ async function handleAddShopkeeper(e) {
     const email = formData.get('email');
     const phone = formData.get('phone');
 
-    // Auto-generate password (or could be input)
-    const password = "Shopkeeper123!";
+    // Auto-generate a secure temporary password
+    const password = generateTempPassword(12);
 
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
@@ -1098,11 +1128,21 @@ async function handleAddShopkeeper(e) {
         closeModal('addShopkeeperModal');
         e.target.reset();
 
-        // Show success with credentials hint
+        // Show success and open credentials modal for easy sharing
         showToast('Shopkeeper created!', 'success');
-        alert(`✅ Shopkeeper created successfully!\n\nEmail: ${email}\nPassword: ${password}\n\nPlease share these credentials with your staff.`);
 
-        populateShopkeepersTable();
+        // If backend had to insert profile without email column, warn the user
+        if (data.message && data.message.toLowerCase().includes('without email')) {
+            showToast('Note: profile created but email column missing from users table; email was not stored in profile', 'warning');
+        }
+
+        openCredentialsModal(email, password, name, data.user?.id || null);
+
+        // Refresh table but avoid unhandled exceptions breaking the page
+        populateShopkeepersTable().catch(err => {
+            console.error('Failed to refresh shopkeepers table after create:', err);
+            showToast('Failed to refresh shopkeepers list', 'error');
+        });
 
     } catch (err) {
         console.error('Add Shopkeeper Error:', err);
@@ -1114,6 +1154,131 @@ async function handleAddShopkeeper(e) {
         }
     }
 }
+
+// Generates a random temporary password
+function generateTempPassword(length = 12) {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+    let out = '';
+    for (let i = 0; i < length; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+}
+
+function openCredentialsModal(email, password, name = '', userId = '') {
+    const modal = document.getElementById('credentialsModal');
+    if (!modal) return;
+    modal.dataset.userId = userId || '';
+    modal.querySelector('#credName').textContent = name || '-';
+    modal.querySelector('#credEmail').textContent = email || '-';
+    modal.querySelector('#credPassword').textContent = password || '-';
+
+    const copyBtn = modal.querySelector('#credCopyBtn');
+    if (copyBtn) {
+        copyBtn.onclick = async () => {
+            const text = `Email: ${email}\nPassword: ${password}`;
+            try {
+                await copyToClipboard(text);
+                showToast('Credentials copied to clipboard', 'success');
+            } catch (err) {
+                console.error('Copy failed:', err);
+                showToast('Failed to copy credentials. Please copy manually.', 'error');
+            }
+        };
+    }
+
+    openModal('credentialsModal');
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+    }
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+}
+
+// Reset password for an existing shopkeeper and show new credentials
+window.resetPasswordForShopkeeper = async function (userId) {
+    if (!confirm('Generate a new temporary password for this shopkeeper?')) return;
+    try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch(`http://localhost:5000/api/shops/shopkeepers/${userId}/reset-password`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Failed to reset password');
+
+        openCredentialsModal(data.email || '-', data.newPassword || '-', data.full_name || '-', userId);
+        showToast('Password reset. Share with the shopkeeper.', 'success');
+        await populateShopkeepersTable();
+    } catch (err) {
+        console.error('Reset password error:', err);
+        showToast(err.message || 'Failed to reset password', 'error');
+    }
+}
+
+// Open edit modal prefilled
+window.openEditShopkeeper = async function (userId) {
+    const user = shopkeepers.find(u => u.id === userId || u.id === Number(userId));
+    if (!user) {
+        showToast('User not found', 'error');
+        return;
+    }
+    const modal = document.getElementById('editShopkeeperModal');
+    const form = document.getElementById('editShopkeeperForm');
+    if (!modal || !form) return;
+    form.name.value = user.full_name || user.name || '';
+    form.phone.value = user.phone || '';
+    if (form.role) form.role.value = (user.role || 'shopkeeper');
+    form.dataset.userId = user.id;
+    openModal('editShopkeeperModal');
+}
+
+async function handleEditShopkeeper(e) {
+    e.preventDefault();
+    const userId = this.dataset?.userId || e.target.dataset?.userId;
+    const payload = { full_name: e.target.name.value, phone: e.target.phone.value };
+    if (e.target.role) payload.role = e.target.role.value;    try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch(`http://localhost:5000/api/shops/shopkeepers/${userId}`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Failed to update shopkeeper');
+        closeModal('editShopkeeperModal');
+        showToast('Shopkeeper updated', 'success');
+        await populateShopkeepersTable();
+    } catch (err) {
+        console.error('Update shopkeeper error:', err);
+        showToast(err.message || 'Failed to update shopkeeper', 'error');
+    }
+}
+
+// Toggle activation
+window.toggleShopkeeperStatus = async function (userId, currentlyDisabled) {
+    try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch(`http://localhost:5000/api/shops/shopkeepers/${userId}/status`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ disabled: !currentlyDisabled })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Failed to update status');
+        showToast(data.message || 'Status updated', 'success');
+        await populateShopkeepersTable();
+    } catch (err) {
+        console.error('Toggle status error:', err);
+        showToast(err.message || 'Failed to update status', 'error');
+    }
+};
 
 function showHelp() { showToast('Help center coming soon!', 'info'); }
 function showFeedback() { showToast('Feedback form coming soon!', 'info'); }

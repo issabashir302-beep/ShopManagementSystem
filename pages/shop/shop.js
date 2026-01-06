@@ -280,6 +280,7 @@ async function fetchProductsForShopkeeper() {
             name: p.name || p.product_name || '',
             sku: p.sku || p.code || '',
             category: p.category || '',
+            buyPrice: Number(p.buying_price ?? p.buy_price ?? p.buyPrice ?? 0),
             price: Number(p.selling_price ?? p.sellPrice ?? p.sell_price ?? 0),
             stock: Number(p.quantity ?? p.stock ?? 0),
             unit: p.unit || '',
@@ -295,7 +296,8 @@ async function fetchProductsForShopkeeper() {
 }
 
 function renderInventoryTable(searchTerm = '') {
-    const tbody = document.getElementById('inventoryTable');
+    // prefer the admin-style tbody id if present
+    const tbody = document.getElementById('inventoryTableBody') || document.getElementById('inventoryTable') || null;
     if (!tbody) return;
 
     const term = (searchTerm || '').toLowerCase();
@@ -305,25 +307,33 @@ function renderInventoryTable(searchTerm = '') {
 
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-tertiary); padding: 20px;">No products available</td></tr>`;
+        // determine column count
+        const colCount = 8;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color: var(--text-tertiary); padding: 20px;">No products available</td></tr>`;
         return;
     }
 
     filtered.forEach(p => {
         const tr = document.createElement('tr');
+
+        const totalValue = Number((p.price || 0) * (p.stock || 0));
+
         tr.innerHTML = `
             <td>
                 <div style="font-weight: 600;">${p.name}</div>
                 <div style="font-size:0.85rem; color: var(--text-tertiary);">${p.supplier || ''}</div>
             </td>
-            <td>${p.sku}</td>
-            <td>${p.category}</td>
-            <td style="font-weight:700;">KSh ${Number(p.price).toLocaleString('en-KE')}</td>
+            <td>${p.sku || ''}</td>
+            <td>${p.category || ''}</td>
+            <td>KSh ${Number(p.buyPrice || 0).toLocaleString('en-KE')}</td>
+            <td style="font-weight:700;">KSh ${Number(p.price || 0).toLocaleString('en-KE')}</td>
             <td>${p.stock}</td>
+            <td style="font-weight:700;">KSh ${totalValue.toLocaleString('en-KE')}</td>
             <td>
                 <button class="primary-btn" ${p.stock <= 0 ? 'disabled' : ''} onclick="addToCart(${p.id})">Add to Cart</button>
             </td>
         `;
+
         tbody.appendChild(tr);
     });
 }
