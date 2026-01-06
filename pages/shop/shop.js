@@ -1,15 +1,4 @@
-// Mock Data (In production this comes from backend/localStore)
-const products = [
-    { id: 1, name: "Maize Meal 2kg", category: "maize-meal", price: 120, stock: 45, image: "fas fa-bag-shopping" },
-    { id: 2, name: "Sugar 1kg", category: "sugar", price: 150, stock: 12, image: "fas fa-cube" },
-    { id: 3, name: "Cooking Oil 1L", category: "cooking-fat", price: 300, stock: 8, image: "fas fa-bottle-droplet" },
-    { id: 4, name: "Tea Leaves 500g", category: "beverages", price: 80, stock: 100, image: "fas fa-leaf" },
-    { id: 5, name: "Soda 500ml", category: "beverages", price: 60, stock: 24, image: "fas fa-bottle-water" },
-    { id: 6, name: "Bar Soap", category: "cleaning", price: 40, stock: 50, image: "fas fa-soap" },
-    { id: 7, name: "Milk 500ml", category: "dairy", price: 65, stock: 5, image: "fas fa-cow" },
-    { id: 8, name: "Bread 400g", category: "snacks", price: 60, stock: 0, image: "fas fa-bread-slice" },
-    { id: 9, name: "Mandazi", category: "snacks", price: 10, stock: 30, image: "fas fa-cookie" },
-];
+
 
 let cart = [];
 let currentFilter = 'all';
@@ -21,10 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Theme
     if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    const themeToggleEl = document.getElementById('themeToggle');
+    if (themeToggleEl) themeToggleEl.addEventListener('click', toggleTheme);
 
     // Search
-    document.getElementById('posSearch').addEventListener('input', handleSearch);
+    const posSearchEl = document.getElementById('posSearch');
+    if (posSearchEl) posSearchEl.addEventListener('input', handleSearch);
 
     // Filters
     document.querySelectorAll('.filter-chip').forEach(chip => {
@@ -37,16 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Cart Actions
-    document.getElementById('clearCart').addEventListener('click', clearCart);
-    document.getElementById('payCash').addEventListener('click', () => processPayment('Cash'));
-    document.getElementById('payMpesa').addEventListener('click', () => processPayment('M-Pesa'));
-    document.getElementById('checkoutBtn').addEventListener('click', () => processPayment('Cash')); // Default
+    const clearCartEl = document.getElementById('clearCart');
+    if (clearCartEl) clearCartEl.addEventListener('click', clearCart);
+    const payCashEl = document.getElementById('payCash');
+    if (payCashEl) payCashEl.addEventListener('click', () => processPayment('Cash'));
+    const payMpesaEl = document.getElementById('payMpesa');
+    if (payMpesaEl) payMpesaEl.addEventListener('click', () => processPayment('M-Pesa'));
+    const checkoutBtnEl = document.getElementById('checkoutBtn');
+    if (checkoutBtnEl) checkoutBtnEl.addEventListener('click', () => processPayment('Cash'));
 
     // Logout
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
+    const logoutBtnEl = document.getElementById('logoutBtn');
+    if (logoutBtnEl) logoutBtnEl.addEventListener('click', async () => {
         if (!confirm('End Shift and Logout?')) return;
-
-        const btn = document.getElementById('logoutBtn');
+        const btn = logoutBtnEl;
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
@@ -62,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!res.ok) {
                     if (res.status === 401) {
                         localStorage.removeItem('access_token');
-                        showToast('Session expired', 'info');
+                        if (typeof showToast === 'function') showToast('Session expired', 'info');
                         setTimeout(() => window.location.href = '/pages/auth/login.html', 500);
                         return;
                     }
@@ -72,11 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             localStorage.removeItem('access_token');
-            showToast('Logged out', 'success');
+            if (typeof showToast === 'function') showToast('Logged out', 'success');
             setTimeout(() => window.location.href = '/pages/auth/login.html', 500);
         } catch (err) {
             console.error('Logout error:', err);
-            showToast(err.message || 'Logout failed', 'error');
+            if (typeof showToast === 'function') showToast(err.message || 'Logout failed', 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
