@@ -34,6 +34,7 @@ npm install
 npm run dev
 npm start
 npm test
+npm run test:integration
 npm run test:coverage
 npm run lint
 npm run format:check
@@ -56,6 +57,8 @@ There is currently no `test:integration` script. Tests use injected fakes and do
 | `MONTHLY_REPORT_CRON`       | Monthly cron expression; defaults to `0 8 1 * *`           |
 | `CORS_ORIGINS`              | Comma-separated exact browser origins                      |
 | `LOG_LEVEL`                 | `debug`, `info`, `warn`, or `error`                        |
+
+Integration tests require the optional `TEST_SUPABASE_*` variables and `TEST_SUPABASE_DISPOSABLE=true`. They retain immutable ledger rows, so use a disposable project that can be reset after the run.
 
 Startup fails for missing/invalid values. Production rejects wildcard CORS.
 
@@ -114,6 +117,8 @@ Base URL: `/api/v1`. Protected requests require `Authorization: Bearer <access-t
 | GET    | `/api/v1/payments/:paymentId`                       | Member           | Payment detail                            |
 | POST   | `/api/v1/payments/stripe/create-intent`             | Member           | Create/reuse pending card PaymentIntent   |
 | POST   | `/api/v1/payments/stripe/webhook`                   | Stripe signature | Trusted payment status transition         |
+| POST   | `/api/v1/sales/:saleId/void`                        | Owner            | Atomic sale void and stock restoration    |
+| POST   | `/api/v1/sales/:saleId/returns`                     | Owner            | Atomic partial/full return                |
 | GET    | `/api/v1/reports/daily-sales`                       | Owner            | Local-day sales report                    |
 | GET    | `/api/v1/reports/monthly-sales`                     | Owner            | Calendar-month sales report               |
 | GET    | `/api/v1/reports/products`                          | Owner            | Product performance                       |
@@ -132,7 +137,7 @@ Module-specific contracts are documented in each `src/modules/*/README.md`.
 - `adjust_inventory` is the only manual inventory write path.
 - `create_sale_with_items` is the only sale write path; it owns pricing, stock locking, receipt, payment, movement, audit, and idempotency.
 - Cash completes immediately; M-Pesa remains pending. Card remains pending until a signature-verified Stripe webhook. No browser-controlled payment mutation route exists.
-- Returns/voids are inactive because the schema lacks compensating tables and atomic RPCs; see `src/modules/returns/README.md`.
+- Returns and voids preserve original financial rows and use compensating records plus atomic inventory restoration. Cash refunds complete locally; M-Pesa/card refunds remain pending.
 - Reports count only completed sales and completed payments. Existing voided/refunded rows are excluded; profit uses sale-time cost snapshots.
 - At 08:00 local time on day 1, the scheduler sends the previous month. `report_deliveries` plus a Resend idempotency key protects retries and multiple instances.
 

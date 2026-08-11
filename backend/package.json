@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test --test-isolation=none --test-concurrency=1",
+    "test": "node --test --test-isolation=none --test-concurrency=1 src/**/*.test.js",
+    "test:integration": "node --test --test-isolation=none --test-concurrency=1 tests/integration/*.integration.test.js",
     "test:coverage": "node --test --test-isolation=none --test-concurrency=1 --experimental-test-coverage",
     "lint": "eslint .",
     "format": "prettier --write .",

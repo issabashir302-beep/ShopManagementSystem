@@ -48,6 +48,28 @@ export function publicPayment(row) {
     updatedAt: row.updated_at
   }
 }
+function publicReturn(row) {
+  return {
+    id: row.id,
+    saleId: row.sale_id,
+    createdBy: row.created_by,
+    type: row.return_type,
+    status: row.status,
+    reason: row.reason,
+    refundMethod: row.refund_method,
+    refundStatus: row.refund_status,
+    refundAmount: row.refund_amount,
+    createdAt: row.created_at,
+    items: row.items.map((item) => ({
+      id: item.id,
+      saleItemId: item.sale_item_id,
+      productId: item.product_id,
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      refundAmount: item.refund_amount
+    }))
+  }
+}
 
 export class SaleService {
   constructor({ saleRepository, shopService, logger }) {
@@ -100,7 +122,8 @@ export class SaleService {
     return {
       sale: publicSale(detail.sale),
       items: detail.items.map(publicItem),
-      payments: detail.payments.map(publicPayment)
+      payments: detail.payments.map(publicPayment),
+      returns: (detail.returns ?? []).map(publicReturn)
     }
   }
 }

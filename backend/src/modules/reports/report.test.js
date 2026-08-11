@@ -82,13 +82,14 @@ describe('financial SQL contract', () => {
       /buying_price\)\).*gross_profit/
     )
   })
-  it('counts only completed persisted payments and scopes every sale to the requested shop', async () => {
+  it('uses persisted payment states, subtracts returns, and scopes every sale to the shop', async () => {
     const sql = await readFile(
       new URL('../../../../supabase/database.sql', import.meta.url),
       'utf8'
     )
     assert.match(sql, /where shop_id = p_shop_id and status = 'completed'/)
-    assert.match(sql, /p\.status = 'completed'/)
+    assert.match(sql, /p\.status in \('completed','refunded'\)/)
+    assert.match(sql, /i\.subtotal-coalesce\(r\.refund_amount,0\)/)
   })
 })
 describe('report API security', () => {

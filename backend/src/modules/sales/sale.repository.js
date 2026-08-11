@@ -6,6 +6,10 @@ const ITEM_FIELDS =
   'id, sale_id, product_id, product_name, product_sku, product_barcode, unit, quantity, unit_price, unit_cost, discount_amount, tax_amount, subtotal, created_at'
 const PAYMENT_FIELDS =
   'id, sale_id, method, status, amount, provider_reference, external_reference, created_at, updated_at'
+const RETURN_FIELDS =
+  'id, sale_id, created_by, return_type, status, reason, refund_method, refund_status, refund_amount, created_at'
+const RETURN_ITEM_FIELDS =
+  'id, return_id, sale_item_id, product_id, quantity, unit_price, refund_amount, created_at'
 
 function saleError(error) {
   const message = error?.message ?? ''
@@ -75,16 +79,35 @@ export class SaleRepository {
       .maybeSingle()
     if (saleResult.error) throw saleError(saleResult.error)
     if (!saleResult.data) return null
-    const [itemsResult, paymentsResult] = await Promise.all([
+    const [itemsResult, paymentsResult, returnsResult] = await Promise.all([
       client.from('sale_items').select(ITEM_FIELDS).eq('sale_id', saleId).order('created_at'),
-      client.from('payments').select(PAYMENT_FIELDS).eq('sale_id', saleId).order('created_at')
+      client.from('payments').select(PAYMENT_FIELDS).eq('sale_id', saleId).order('created_at'),
+      client.from('sale_returns').select(RETURN_FIELDS).eq('sale_id', saleId).order('created_at')
     ])
     if (itemsResult.error) throw saleError(itemsResult.error)
     if (paymentsResult.error) throw saleError(paymentsResult.error)
+    if (returnsResult.error) throw saleError(returnsResult.error)
+    let returnItems = []
+    if (returnsResult.data?.length) {
+      const returnItemsResult = await client
+        .from('sale_return_items')
+        .select(RETURN_ITEM_FIELDS)
+        .in(
+          'return_id',
+          returnsResult.data.map((entry) => entry.id)
+        )
+        .order('created_at')
+      if (returnItemsResult.error) throw saleError(returnItemsResult.error)
+      returnItems = returnItemsResult.data ?? []
+    }
     return {
       sale: saleResult.data,
       items: itemsResult.data ?? [],
-      payments: paymentsResult.data ?? []
+      payments: paymentsResult.data ?? [],
+      returns: (returnsResult.data ?? []).map((entry) => ({
+        ...entry,
+        items: returnItems.filter((item) => item.return_id === entry.id)
+      }))
     }
   }
 }

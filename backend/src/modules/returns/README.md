@@ -1,7 +1,14 @@
-# Returns and voids — database-blocked
+# Returns and voids
 
-No HTTP return or void endpoint is registered. The authoritative schema has status/void columns and `RETURN`/`VOID` inventory movement values, but no return, return-item, or refund tables and no transactional return/void RPC.
+Owner-only compensating workflows for completed sales. Original sales, sale items, and payment rows are retained.
 
-A safe implementation requires reviewed database functions that atomically validate owner/shop/status and cumulative returned quantities, preserve original sale/items/payments, restore inventory exactly once, append compensating movements, create refund records, and audit the actor. Separate Data API calls could leave partial financial and inventory state, so they are intentionally refused.
+## Endpoints
 
-Planned routes after database support exists are owner-only `POST /api/v1/sales/:saleId/void` and `POST /api/v1/sales/:saleId/returns`.
+- `POST /api/v1/sales/:saleId/void` with `{ "reason": "..." }`
+- `POST /api/v1/sales/:saleId/returns` with sale-item IDs, positive quantities, and a reason
+
+Both operations call one PostgreSQL RPC. `void_sale` restores every sold item exactly once. `create_sale_return` locks the sale and validates cumulative returned quantities before restoring inventory. Each operation creates `sale_returns`, `sale_return_items`, inventory movements, and an audit entry in the same transaction.
+
+Cash refunds are recorded as completed. M-Pesa and card refunds remain pending for a future trusted provider/manual workflow; no external refund is faked. The browser cannot provide refund amounts or statuses.
+
+Run unit/API tests with `npm test`. Live transaction tests require an explicitly disposable Supabase project and run with `npm run test:integration`.
