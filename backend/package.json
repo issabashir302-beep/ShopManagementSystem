@@ -18,6 +18,10 @@
     "@supabase/supabase-js": "^2.89.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "luxon": "^3.7.2",
+    "node-cron": "^4.6.0",
+    "resend": "^6.19.0",
+    "stripe": "^22.5.0"
   }
 }

@@ -100,7 +100,7 @@ The schema provides future-safe sale states and movement types for voids/refunds
 4. Run `database.sql` once against the empty project.
 5. Confirm all tables, functions, views, triggers, policies, and grants exist.
 6. Configure backend `SUPABASE_URL`, anon key, and backend-only service-role key.
-7. Apply the backend changes listed in `BACKEND_CHANGES_REQUIRED.md` before using checkout.
+7. Review the backend compatibility status in `BACKEND_CHANGES_REQUIRED.md`.
 8. Run authorization, concurrency, and transaction tests in a non-production project.
 
 The bootstrap targets a fresh database. It intentionally contains no `DROP TABLE`, data rewrite, or automatic conversion of the current development schema.
@@ -120,4 +120,4 @@ No `seed.sql` is provided. Test records require real `auth.users.id` values. Cre
 - `user_role` is canonical; old code currently expects `role`.
 - Old `shop_staff`, `shop_users`, and `shop_assignments` names are replaced by `shop_memberships`.
 
-See `BACKEND_CHANGES_REQUIRED.md` for exact code impact.
+See `BACKEND_CHANGES_REQUIRED.md` for current compatibility status and remaining gaps.

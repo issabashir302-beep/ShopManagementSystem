@@ -1,150 +1,123 @@
 # Shopwise MiniPOS backend
 
-Node.js/Express API for Shopwise foundation, authentication, profiles, one-shop context, shopkeepers, products, and inventory. The Supabase schema in `../supabase/database.sql` is authoritative.
+Node.js/Express API for authentication, users, one-shop context, shopkeepers, products, inventory, checkout/sales, and payment reads. `../supabase/database.sql` is authoritative.
 
-## Architecture
-
-```text
-HTTP route
-  → validation
-  → verified Supabase access token
-  → controller
-  → service/business rules
-  → repository/request-scoped Supabase client
-  → PostgreSQL + RLS
-```
+## Structure
 
 ```text
-src/
-├── config/          environment and Supabase clients
-├── middleware/      auth, request IDs, logging, security, errors
-├── modules/
-│   ├── auth/        Supabase Auth operations
-│   ├── users/       self-service application profile
-│   ├── shops/       current one-shop MiniPOS context
-│   ├── memberships/ owner-managed shopkeepers
-│   ├── products/    shop-scoped catalog
-│   └── inventory/   balances, movements, adjustment RPC
-├── errors/          safe application errors
-├── utils/           responses, validation, logging
-├── dependencies.js  runtime composition
-├── app.js           testable Express application
-└── server.js        process startup and shutdown
+backend/
+├── server.js              package entrypoint; delegates to src/server.js
+├── src/
+│   ├── app.js             Express composition and route registration
+│   ├── server.js          runtime startup and graceful shutdown
+│   ├── dependencies.js    dependency composition
+│   ├── config/            environment and Supabase clients
+│   ├── errors/            AppError
+│   ├── middleware/        auth, errors, 404, request ID/logging, security
+│   ├── utils/             responses, validation, async handling, logger
+│   └── modules/           auth, users, shops, memberships, products,
+│                          inventory, sales, payments, returns documentation
+└── tests/helpers/         focused API test harness
 ```
 
-Controllers are thin. Services own business decisions. Repositories contain Supabase table queries. Normal data operations use the caller's JWT and RLS. The centralized service-role client is limited to Auth consistency/compensation and dependency readiness.
+Each active feature follows route → validation/auth → controller → service → repository/RPC. Ordinary database work uses a caller-JWT Supabase client and RLS. The centralized service-role client is limited to Auth administration/compensation and readiness.
 
-## Setup
+## Setup and commands
 
-1. Initialize a fresh Supabase project with `../supabase/database.sql`.
-2. Copy `.env.example` to `.env`.
-3. Supply development-project credentials. Never expose the service-role key to browsers.
-4. Install and run:
+Initialize a fresh Supabase project with `../supabase/database.sql`, copy `.env.example` to `.env`, and supply non-production development credentials.
 
 ```bash
+cd backend
 npm install
 npm run dev
-```
-
-Required configuration:
-
-| Variable | Purpose |
-|---|---|
-| `NODE_ENV` | `development`, `test`, or `production` |
-| `PORT` | API port |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_ANON_KEY` | Normal Auth/RLS client key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Backend-only Auth administration/readiness key |
-| `CORS_ORIGINS` | Comma-separated exact browser origins |
-| `LOG_LEVEL` | `debug`, `info`, `warn`, or `error` |
-
-Startup fails if required values are absent or invalid. Production rejects wildcard CORS.
-
-## Commands
-
-```bash
 npm start
-npm run dev
 npm test
 npm run test:coverage
 npm run lint
 ```
 
-Tests set and assert `NODE_ENV=test` inside the harness, use injected fakes, and never load environment configuration or contact Supabase. Future live integration tests must require separate explicitly named test-project credentials; they must never fall back to development credentials.
+There is currently no `test:integration` script. Tests use injected fakes and do not contact Supabase.
+
+| Variable | Purpose |
+|---|---|
+| `NODE_ENV` | `development`, `test`, or `production` |
+| `PORT` | HTTP port |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Caller-context Auth/RLS client key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Backend-only Auth administration/readiness key |
+| `STRIPE_SECRET_KEY` | Backend-only Stripe API key; use test mode locally |
+| `STRIPE_WEBHOOK_SECRET` | Stripe endpoint signing secret |
+| `CORS_ORIGINS` | Comma-separated exact browser origins |
+| `LOG_LEVEL` | `debug`, `info`, `warn`, or `error` |
+
+Startup fails for missing/invalid values. Production rejects wildcard CORS.
 
 ## API conventions
 
-Base URL: `/api/v1`
-
-Success:
+Base URL: `/api/v1`. Protected requests require `Authorization: Bearer <access-token>`.
 
 ```json
 { "success": true, "data": {}, "requestId": "uuid" }
 ```
 
-Error:
-
 ```json
-{
-  "success": false,
-  "error": { "code": "VALIDATION_ERROR", "message": "Invalid request" },
-  "requestId": "uuid"
-}
+{ "success": false, "error": { "code": "VALIDATION_ERROR", "message": "Invalid request" }, "requestId": "uuid" }
 ```
-
-Supply protected requests with `Authorization: Bearer <access-token>`. Tokens are verified with Supabase Auth, not merely decoded. API responses use camelCase; repository boundaries map the database's snake_case fields.
 
 ## Active API
 
-| Method | Route | Auth | Rule / purpose |
+| Method | Route | Auth | Purpose |
 |---|---|---|---|
-| GET | `/api/v1/health` | No | Process liveness |
-| GET | `/api/v1/readiness` | No | Supabase dependency readiness |
-| POST | `/api/v1/auth/signup` | No | Create an owner; role input rejected |
-| POST | `/api/v1/auth/login` | No | Email/password session |
-| POST | `/api/v1/auth/refresh` | No | Refresh a session with refresh token |
-| POST | `/api/v1/auth/logout` | Yes | Global Supabase sign-out |
-| GET | `/api/v1/auth/session` | Yes | Concise verified identity |
-| GET | `/api/v1/users/me` | Yes | Own application profile |
-| PATCH | `/api/v1/users/me` | Yes | Safe self-service profile fields |
-| POST | `/api/v1/shops` | Owner | Create the owner's one MiniPOS shop |
-| GET | `/api/v1/shops/me` | Yes | Owner or shopkeeper assigned shop |
-| PATCH | `/api/v1/shops/me` | Owner | Update safe shop settings |
-| POST | `/api/v1/shopkeepers` | Owner | Create Auth shopkeeper and membership |
-| GET | `/api/v1/shopkeepers` | Owner | List owned-shop staff |
-| GET | `/api/v1/shopkeepers/:shopkeeperId` | Owner | Retrieve owned-shop staff member |
-| PATCH | `/api/v1/shopkeepers/:shopkeeperId` | Owner | Update safe staff profile fields |
+| GET | `/api/v1/health` | No | Liveness |
+| GET | `/api/v1/readiness` | No | Supabase readiness |
+| POST | `/api/v1/auth/signup` | No | Owner signup; role input rejected |
+| POST | `/api/v1/auth/login` | No | Login |
+| POST | `/api/v1/auth/refresh` | No | Refresh session |
+| POST | `/api/v1/auth/logout` | Yes | Global sign-out |
+| GET | `/api/v1/auth/session` | Yes | Verified identity |
+| GET | `/api/v1/users/me` | Yes | Own profile |
+| PATCH | `/api/v1/users/me` | Yes | Safe profile update |
+| POST | `/api/v1/shops` | Owner | Create the owner's shop |
+| GET | `/api/v1/shops/me` | Member | Current shop |
+| PATCH | `/api/v1/shops/me` | Owner | Shop settings |
+| POST | `/api/v1/shopkeepers` | Owner | Create shopkeeper/membership |
+| GET | `/api/v1/shopkeepers` | Owner | List staff |
+| GET | `/api/v1/shopkeepers/:shopkeeperId` | Owner | Staff detail |
+| PATCH | `/api/v1/shopkeepers/:shopkeeperId` | Owner | Safe staff update |
 | PATCH | `/api/v1/shopkeepers/:shopkeeperId/status` | Owner | Activate/deactivate membership |
-| POST | `/api/v1/shopkeepers/:shopkeeperId/reset-password` | Owner | Initiate Supabase password recovery |
-| POST | `/api/v1/products` | Owner | Create product; inventory starts at zero |
-| GET | `/api/v1/products` | Member | Search/filter/paginate shop catalog |
-| GET | `/api/v1/products/:productId` | Member | Retrieve scoped product |
-| PATCH | `/api/v1/products/:productId` | Owner | Update catalog fields |
-| DELETE | `/api/v1/products/:productId` | Owner | Soft-archive product |
-| GET | `/api/v1/inventory` | Member | Active product balances |
-| GET | `/api/v1/inventory/low-stock` | Member | Persisted low-stock view |
-| GET | `/api/v1/products/:productId/inventory` | Member | One product balance |
+| POST | `/api/v1/shopkeepers/:shopkeeperId/reset-password` | Owner | Password recovery |
+| POST | `/api/v1/products` | Owner | Create catalog product |
+| GET | `/api/v1/products` | Member | Paginated catalog |
+| GET | `/api/v1/products/:productId` | Member | Product detail |
+| PATCH | `/api/v1/products/:productId` | Owner | Catalog update |
+| DELETE | `/api/v1/products/:productId` | Owner | Soft archive |
+| GET | `/api/v1/inventory` | Member | Inventory balances |
+| GET | `/api/v1/inventory/low-stock` | Member | Low-stock view |
+| GET | `/api/v1/products/:productId/inventory` | Member | Product balance |
 | GET | `/api/v1/products/:productId/inventory/movements` | Member | Movement history |
-| POST | `/api/v1/products/:productId/inventory/adjustments` | Owner | Atomic manual stock movement |
+| POST | `/api/v1/products/:productId/inventory/adjustments` | Owner | Atomic adjustment RPC |
+| POST | `/api/v1/checkout` | Member | Atomic, idempotent checkout RPC |
+| GET | `/api/v1/sales` | Member | Paginated current-shop sales |
+| GET | `/api/v1/sales/:saleId` | Member | Sale/items/payments |
+| GET | `/api/v1/sales/:saleId/payments` | Member | Sale payments |
+| GET | `/api/v1/payments/:paymentId` | Member | Payment detail |
+| POST | `/api/v1/payments/stripe/create-intent` | Member | Create/reuse pending card PaymentIntent |
+| POST | `/api/v1/payments/stripe/webhook` | Stripe signature | Trusted payment status transition |
 
-See each module README for accepted fields and important rules.
+Module-specific contracts are documented in each `src/modules/*/README.md`.
 
-## Authentication notes
+## Important boundaries
 
-The database trigger on `auth.users` creates `public.users`. Public signup does not insert a profile itself and cannot choose a role. Signup verifies the triggered owner profile; if verification fails, the backend attempts to remove the inconsistent Auth identity and reports failure.
+- Public signup cannot choose a role; the database Auth trigger creates the owner profile.
+- Shop access comes from one active `shop_memberships` row.
+- Products do not store quantity. `inventory.quantity` changes through trusted RPCs.
+- `adjust_inventory` is the only manual inventory write path.
+- `create_sale_with_items` is the only sale write path; it owns pricing, stock locking, receipt, payment, movement, audit, and idempotency.
+- Cash completes immediately; M-Pesa remains pending. Card remains pending until a signature-verified Stripe webhook. No browser-controlled payment mutation route exists.
+- Returns/voids are inactive because the schema lacks compensating tables and atomic RPCs; see `src/modules/returns/README.md`.
 
-Global logout revokes refresh sessions. Existing access JWTs can remain valid until expiry, so clients must clear local session data too.
+## Canonical runtime and compatibility
 
-## One-shop MiniPOS rule
+`backend/server.js` is the single package entrypoint and delegates to `src/server.js`. All active implementation code lives under `src/`. Superseded root-level controllers, routes, middleware, and Supabase configuration were removed.
 
-The API rejects a second owner shop and rejects multiple active memberships. The current database was originally designed for multi-shop ownership and has no unique `shops.owner_id` constraint. Before horizontally scaling shop creation, add a reviewed database uniqueness migration; service validation alone cannot eliminate a simultaneous cross-instance insertion race.
-
-## Catalog and inventory rules
-
-Product requests never accept `shopId`, stock, or quantity. Catalog writes are owner-only; shopkeepers receive active read-only catalog access. Product deletion is archival, preserving financial and movement history.
-
-`inventory.quantity` is the current balance. The only manual write path is `adjust_inventory`, which atomically updates the balance and adds one immutable `inventory_movements` entry plus an audit record. Supported manual API types are `INITIAL_STOCK`, `RESTOCK`, `ADJUSTMENT`, and `DAMAGE`. Checkout-owned movement types remain unavailable.
-
-## Inactive legacy code
-
-The old auth and sales controllers/routes, `middleware/authMiddleware.js`, and `config/supabase.js` remain for user-owned changes or later sales-domain reference. They are not imported or registered by the new entrypoint. Legacy shop and inventory controllers/routes were removed after their replacements were completed. Only routes listed above are active.
+Legacy frontend `/api/*` calls are documented in `BACKEND_CLEANUP_NOTES.md`; frontend files were not modified.

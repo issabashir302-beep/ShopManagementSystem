@@ -13,10 +13,13 @@ import { createShopRouter } from './modules/shops/shop.routes.js'
 import { createMembershipRouter } from './modules/memberships/membership.routes.js'
 import { createProductRouter } from './modules/products/product.routes.js'
 import { createInventoryRouter } from './modules/inventory/inventory.routes.js'
+import { createSaleRouter } from './modules/sales/sale.routes.js'
+import { createPaymentRouter, createStripeWebhookRouter } from './modules/payments/payment.routes.js'
+import { createReportRouter } from './modules/reports/report.routes.js'
 
 export function createApp({
   config, logger, authService, userService, shopService, membershipService,
-  productService, inventoryService, readinessCheck
+  productService, inventoryService, saleService, paymentService, reportService, notificationService, readinessCheck
 }) {
   const app = express()
   const allowedOrigins = new Set(config.corsOrigins)
@@ -34,6 +37,7 @@ export function createApp({
       return callback(AppError.forbidden('Origin is not allowed by CORS policy'))
     }
   }))
+  app.use(createStripeWebhookRouter(paymentService))
   app.use(express.json({ limit: '100kb' }))
 
   app.get('/api/v1/health', (req, res) => sendSuccess(res, { status: 'alive' }))
@@ -52,6 +56,9 @@ export function createApp({
   app.use('/api/v1/shopkeepers', createMembershipRouter({ authService, membershipService }))
   app.use('/api/v1/products', createProductRouter({ authService, productService }))
   app.use('/api/v1', createInventoryRouter({ authService, inventoryService }))
+  app.use('/api/v1', createSaleRouter({ authService, saleService }))
+  app.use('/api/v1', createPaymentRouter({ authService, paymentService }))
+  app.use('/api/v1', createReportRouter({ authService, reportService, notificationService }))
 
   app.use(notFoundMiddleware)
   app.use(errorMiddleware({ logger, nodeEnv: config.nodeEnv }))

@@ -45,6 +45,19 @@ export async function startTestServer(overrides = {}) {
       async list() { return { items: [] } }, async lowStock() { return { items: [] } }, async get() { return {} },
       async movements() { return { items: [] } }, async adjust(_auth, _id, input) { return input }
     },
+    saleService: overrides.saleService ?? {
+      async checkout(_auth, input) { return input }, async list() { return { items: [] } }, async get() { return {} }
+    },
+    paymentService: overrides.paymentService ?? {
+      async listForSale() { return { items: [] } }, async get() { return {} },
+      async createStripeIntent() { return {} }, async handleStripeWebhook() { return { received: true } }
+    },
+    reportService: overrides.reportService ?? {
+      async generate() { return {} }
+    },
+    notificationService: overrides.notificationService ?? {
+      async sendManual() { return { sent: true } }
+    },
     readinessCheck: overrides.readinessCheck ?? (async () => {})
   })
 

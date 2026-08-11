@@ -1,6 +1,7 @@
 import { env } from './config/env.js'
 import { buildDependencies } from './dependencies.js'
 import { createApp } from './app.js'
+import { startScheduler } from './jobs/scheduler.js'
 
 const dependencies = buildDependencies(env)
 const app = createApp({ config: env, ...dependencies })
@@ -10,11 +11,14 @@ const server = app.listen(env.port, () => {
     environment: env.nodeEnv
   })
 })
+const scheduler = startScheduler({ expression: env.monthlyReportCron, timezone: env.appTimezone,
+  monthlyReportJob: dependencies.monthlyReportJob, logger: dependencies.logger })
 
 let shuttingDown = false
 function shutdown(signal) {
   if (shuttingDown) return
   shuttingDown = true
+  scheduler.stop()
   dependencies.logger.info('server_shutdown_started', { signal })
 
   server.close((error) => {

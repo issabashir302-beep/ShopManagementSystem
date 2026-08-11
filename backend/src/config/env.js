@@ -1,4 +1,6 @@
 import dotenv from 'dotenv'
+import { IANAZone } from 'luxon'
+import cron from 'node-cron'
 
 dotenv.config({ quiet: true })
 
@@ -58,12 +60,22 @@ export function parseEnv(source = process.env) {
     throw new Error('LOG_LEVEL must be debug, info, warn, or error')
   }
 
+  const appTimezone = source.APP_TIMEZONE?.trim() || 'UTC'
+  if (!IANAZone.isValidZone(appTimezone)) throw new Error('APP_TIMEZONE must be a valid IANA timezone')
+  const monthlyReportCron = source.MONTHLY_REPORT_CRON?.trim() || '0 8 1 * *'
+  if (!cron.validate(monthlyReportCron)) throw new Error('MONTHLY_REPORT_CRON must be a valid cron expression')
+
   return Object.freeze({
     nodeEnv,
     port,
     supabaseUrl: validUrl('SUPABASE_URL', source),
     supabaseAnonKey: required('SUPABASE_ANON_KEY', source),
     supabaseServiceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY', source),
+    stripeSecretKey: required('STRIPE_SECRET_KEY', source),
+    stripeWebhookSecret: required('STRIPE_WEBHOOK_SECRET', source),
+    resendApiKey: required('RESEND_API_KEY', source),
+    resendFromEmail: required('RESEND_FROM_EMAIL', source),
+    appTimezone, monthlyReportCron,
     corsOrigins: Object.freeze(corsOrigins),
     logLevel
   })

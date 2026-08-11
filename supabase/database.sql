@@ -180,13 +180,28 @@ create table public.payments (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint payments_method_check check (method in ('cash', 'mpesa')),
+  constraint payments_method_check check (method in ('cash', 'mpesa', 'card')),
   constraint payments_status_check check (status in ('pending', 'completed', 'failed', 'refunded')),
   constraint payments_amount_positive check (amount > 0),
   constraint payments_metadata_object check (jsonb_typeof(metadata) = 'object'),
   constraint payments_provider_reference_not_blank check (provider_reference is null or btrim(provider_reference) <> ''),
   constraint payments_external_reference_not_blank check (external_reference is null or btrim(external_reference) <> '')
 );
+
+create table public.payment_provider_events (
+  event_id text primary key,
+  provider text not null,
+  event_type text not null,
+  provider_reference text not null,
+  processed_at timestamptz not null default now(),
+  constraint payment_provider_events_provider_check check (provider in ('stripe')),
+  constraint payment_provider_events_values_not_blank check (
+    btrim(event_id) <> '' and btrim(event_type) <> '' and btrim(provider_reference) <> ''
+  )
+);
+
+comment on table public.payment_provider_events is
+  'Trusted webhook idempotency ledger. Ordinary clients receive no privileges.';
 
 create table public.inventory_movements (
   id uuid primary key default gen_random_uuid(),
@@ -239,6 +254,26 @@ create table public.receipt_counters (
   last_value bigint not null default 0,
   primary key (shop_id, receipt_date),
   constraint receipt_counters_value_positive check (last_value >= 0)
+);
+
+create table public.report_deliveries (
+  id uuid primary key default gen_random_uuid(),
+  shop_id uuid not null references public.shops(id) on delete restrict,
+  report_type text not null default 'monthly_summary',
+  report_month date not null,
+  status text not null default 'processing',
+  attempts integer not null default 1,
+  request_id uuid,
+  provider_message_id text,
+  last_error text,
+  sent_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint report_deliveries_type_check check (report_type = 'monthly_summary'),
+  constraint report_deliveries_month_check check (report_month = date_trunc('month', report_month)::date),
+  constraint report_deliveries_status_check check (status in ('processing', 'sent', 'failed')),
+  constraint report_deliveries_attempts_positive check (attempts > 0),
+  unique (shop_id, report_type, report_month)
 );
 
 comment on table public.receipt_counters is
@@ -299,6 +334,7 @@ create index inventory_movements_reference_idx
 create index audit_logs_shop_created_idx on public.audit_logs (shop_id, created_at desc);
 create index audit_logs_user_created_idx on public.audit_logs (user_id, created_at desc);
 create index audit_logs_record_idx on public.audit_logs (table_name, record_id) where record_id is not null;
+create index report_deliveries_status_idx on public.report_deliveries (status, report_month);
 
 -- 5. Authentication/profile synchronization
 create or replace function public.handle_new_auth_user()
@@ -517,6 +553,8 @@ create trigger sales_set_updated_at before update on public.sales
 for each row execute function public.set_updated_at();
 create trigger payments_set_updated_at before update on public.payments
 for each row execute function public.set_updated_at();
+create trigger report_deliveries_set_updated_at before update on public.report_deliveries
+for each row execute function public.set_updated_at();
 
 -- 8. RLS helper functions. They are SECURITY DEFINER to avoid recursive policies.
 create or replace function public.is_shop_owner(p_shop_id uuid, p_user_id uuid default auth.uid())
@@ -682,7 +720,7 @@ $function$;
 -- Contract:
 -- sale_data = {
 --   "shop_id": "uuid", "client_request_id": "uuid",
---   "payment_method": "cash|mpesa", "provider_reference": null|string,
+--   "payment_method": "cash|mpesa|card", "provider_reference": null|string,
 --   "external_reference": null|string, "payment_metadata": {}
 -- }
 -- items = [{"product_id":"uuid", "quantity":1.000}, ...]
@@ -736,7 +774,7 @@ begin
   if not public.is_shop_member(v_shop_id, v_user_id) then raise exception 'Active shop membership required'; end if;
 
   v_payment_method := lower(coalesce(nullif(btrim(sale_data ->> 'payment_method'), ''), 'cash'));
-  if v_payment_method not in ('cash', 'mpesa') then raise exception 'Unsupported payment method'; end if;
+  if v_payment_method not in ('cash', 'mpesa', 'card') then raise exception 'Unsupported payment method'; end if;
   v_provider_reference := nullif(btrim(sale_data ->> 'provider_reference'), '');
   v_external_reference := nullif(btrim(sale_data ->> 'external_reference'), '');
   v_payment_metadata := coalesce(sale_data -> 'payment_metadata', '{}'::jsonb);
@@ -899,6 +937,114 @@ $function$;
 comment on function public.create_sale_with_items(jsonb, jsonb) is
   'Atomic POS checkout. Locks product/inventory rows, derives database prices, prevents overselling, snapshots items, records payment and ledger movements, and supports idempotent retries.';
 
+-- 11a. Stripe intent attachment and trusted webhook transitions
+create or replace function public.attach_stripe_payment_intent(
+  p_payment_id uuid,
+  p_provider_reference text
+)
+returns public.payments
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_payment public.payments%rowtype;
+  v_shop_id uuid;
+begin
+  if v_user_id is null then raise exception 'Authentication required'; end if;
+  if nullif(btrim(p_provider_reference), '') is null then raise exception 'Stripe PaymentIntent reference is required'; end if;
+
+  select p, s.shop_id into v_payment, v_shop_id
+  from public.payments p
+  join public.sales s on s.id = p.sale_id
+  where p.id = p_payment_id
+  for update of p;
+
+  if not found or not public.is_shop_member(v_shop_id, v_user_id) then
+    raise exception 'Card payment was not found';
+  end if;
+  if v_payment.method <> 'card' then raise exception 'Payment method is not card'; end if;
+  if v_payment.status not in ('pending', 'failed') then raise exception 'Payment is not eligible for Stripe'; end if;
+  if v_payment.provider_reference is not null and v_payment.provider_reference <> p_provider_reference then
+    raise exception 'A different Stripe PaymentIntent is already attached';
+  end if;
+
+  update public.payments
+    set provider_reference = p_provider_reference,
+        metadata = metadata || jsonb_build_object('provider', 'stripe')
+    where id = p_payment_id
+    returning * into v_payment;
+  return v_payment;
+end;
+$function$;
+
+create or replace function public.process_stripe_payment_event(
+  p_event_id text,
+  p_provider_reference text,
+  p_payment_status text,
+  p_amount_minor bigint,
+  p_currency text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $function$
+declare
+  v_payment public.payments%rowtype;
+  v_sale public.sales%rowtype;
+  v_currency text;
+  v_expected_minor bigint;
+begin
+  if nullif(btrim(p_event_id), '') is null or nullif(btrim(p_provider_reference), '') is null then
+    raise exception 'Stripe event identifiers are required';
+  end if;
+  if p_payment_status not in ('completed', 'failed') then raise exception 'Unsupported Stripe payment transition'; end if;
+
+  insert into public.payment_provider_events (event_id, provider, event_type, provider_reference)
+  values (p_event_id, 'stripe', p_payment_status, p_provider_reference)
+  on conflict (event_id) do nothing;
+  if not found then return jsonb_build_object('duplicate', true); end if;
+
+  select p, s into v_payment, v_sale
+  from public.payments p
+  join public.sales s on s.id = p.sale_id
+  where p.method = 'card' and p.provider_reference = p_provider_reference
+  for update of p, s;
+  if not found then raise exception 'Stripe payment reference was not found'; end if;
+
+  select upper(currency) into v_currency from public.shops where id = v_sale.shop_id;
+  v_expected_minor := case
+    when v_currency in ('BIF','CLP','DJF','GNF','JPY','KMF','KRW','MGA','PYG','RWF','UGX','VND','VUV','XAF','XOF','XPF')
+      then round(v_payment.amount)::bigint
+    when v_currency in ('BHD','JOD','KWD','OMR','TND')
+      then round(v_payment.amount * 1000)::bigint
+    else round(v_payment.amount * 100)::bigint
+  end;
+  if lower(v_currency) <> lower(p_currency) or v_expected_minor <> p_amount_minor then
+    raise exception 'Stripe payment amount or currency does not match';
+  end if;
+
+  -- Stripe does not guarantee webhook delivery order. Never let a late failure
+  -- event downgrade a payment that a verified success event already completed.
+  if v_payment.status = 'completed' and p_payment_status = 'failed' then
+    return jsonb_build_object('duplicate', false, 'ignored', true,
+      'payment_id', v_payment.id, 'sale_id', v_sale.id);
+  end if;
+
+  update public.payments set status = p_payment_status where id = v_payment.id;
+  update public.sales set payment_status = case when p_payment_status = 'completed' then 'paid' else 'unpaid' end
+    where id = v_sale.id;
+  insert into public.audit_logs (shop_id, user_id, action, table_name, record_id, new_values, metadata)
+  values (v_sale.shop_id, null,
+    case when p_payment_status = 'completed' then 'PAYMENT_COMPLETED' else 'PAYMENT_FAILED' end,
+    'payments', v_payment.id, jsonb_build_object('status', p_payment_status),
+    jsonb_build_object('provider', 'stripe', 'event_id', p_event_id, 'provider_reference', p_provider_reference));
+  return jsonb_build_object('duplicate', false, 'payment_id', v_payment.id, 'sale_id', v_sale.id);
+end;
+$function$;
+
 -- 12. Focused audit triggers
 create or replace function public.audit_product_change()
 returns trigger
@@ -993,6 +1139,73 @@ group by s.shop_id, (s.created_at at time zone 'UTC')::date;
 comment on view public.daily_sales_summary is
   'UTC daily aggregation of persisted completed sales. The application may apply the shop timezone in a later reporting layer.';
 
+create or replace function public.get_shop_report(p_shop_id uuid, p_start timestamptz, p_end timestamptz)
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $function$
+declare v_result jsonb;
+begin
+  if p_start >= p_end then raise exception 'Invalid report period'; end if;
+  if auth.uid() is not null and not public.is_shop_owner(p_shop_id, auth.uid()) then raise exception 'Owner access required' using errcode = '42501'; end if;
+  if not exists (select 1 from public.shops where id = p_shop_id and deleted_at is null) then raise exception 'Shop not found'; end if;
+  with included_sales as (
+    select * from public.sales where shop_id = p_shop_id and status = 'completed' and created_at >= p_start and created_at < p_end
+  ), included_items as (
+    select i.* from public.sale_items i join included_sales s on s.id = i.sale_id
+  ), totals as (
+    select count(*)::bigint transactions, coalesce(sum(total_amount),0)::numeric(14,2) total_sales,
+      coalesce(sum(subtotal),0)::numeric(14,2) gross_revenue, coalesce(sum(discount_amount),0)::numeric(14,2) total_discounts,
+      coalesce(sum(tax_amount),0)::numeric(14,2) total_tax from included_sales
+  ), profit as (
+    select coalesce(sum(subtotal - tax_amount - (quantity * unit_cost)),0)::numeric(14,2) gross_profit from included_items
+  ), product_rows as (
+    select product_id, product_name name, product_sku sku, sum(quantity)::numeric(14,3) quantity_sold,
+      sum(subtotal)::numeric(14,2) sales, sum(subtotal - tax_amount - (quantity * unit_cost))::numeric(14,2) gross_profit
+    from included_items group by product_id, product_name, product_sku order by quantity_sold desc, sales desc limit 20
+  ), payment_rows as (
+    select p.method, sum(p.amount)::numeric(14,2) amount, count(*)::bigint payments
+    from public.payments p join included_sales s on s.id = p.sale_id where p.status = 'completed' group by p.method order by p.method
+  ), keeper_rows as (
+    select s.sold_by user_id, coalesce(u.full_name,u.email,'Unknown') name, count(*)::bigint transactions, sum(s.total_amount)::numeric(14,2) sales
+    from included_sales s join public.users u on u.id=s.sold_by group by s.sold_by,u.full_name,u.email order by sales desc
+  ), inventory_totals as (
+    select count(*)::bigint products, coalesce(sum(i.quantity),0)::numeric(14,3) units_on_hand,
+      coalesce(sum(i.quantity*p.buying_price),0)::numeric(14,2) cost_value,
+      count(*) filter (where i.quantity <= p.low_stock_threshold)::bigint low_stock_count
+    from public.products p join public.inventory i on i.product_id=p.id where p.shop_id=p_shop_id and p.deleted_at is null and p.is_active
+  ), low_rows as (
+    select p.id product_id,p.name,p.sku,i.quantity,p.low_stock_threshold threshold
+    from public.products p join public.inventory i on i.product_id=p.id where p.shop_id=p_shop_id and p.deleted_at is null and p.is_active and i.quantity <= p.low_stock_threshold
+    order by (i.quantity-p.low_stock_threshold),p.name limit 50
+  )
+  select jsonb_build_object(
+    'totals', jsonb_build_object('transactions',t.transactions,'totalSales',t.total_sales,'grossRevenue',t.gross_revenue,'totalDiscounts',t.total_discounts,'totalTax',t.total_tax,'grossProfit',pr.gross_profit),
+    'topProducts',coalesce((select jsonb_agg(jsonb_build_object('productId',product_id,'name',name,'sku',sku,'quantitySold',quantity_sold,'sales',sales,'grossProfit',gross_profit)) from product_rows),'[]'::jsonb),
+    'paymentMethods',coalesce((select jsonb_agg(jsonb_build_object('method',method,'amount',amount,'payments',payments)) from payment_rows),'[]'::jsonb),
+    'salesByShopkeeper',coalesce((select jsonb_agg(jsonb_build_object('userId',user_id,'name',name,'transactions',transactions,'sales',sales)) from keeper_rows),'[]'::jsonb),
+    'inventory',jsonb_build_object('products',iv.products,'unitsOnHand',iv.units_on_hand,'costValue',iv.cost_value,'lowStockCount',iv.low_stock_count),
+    'lowStockProducts',coalesce((select jsonb_agg(jsonb_build_object('productId',product_id,'name',name,'sku',sku,'quantity',quantity,'threshold',threshold)) from low_rows),'[]'::jsonb)
+  ) into v_result from totals t cross join profit pr cross join inventory_totals iv;
+  return v_result;
+end;
+$function$;
+
+create or replace function public.claim_report_delivery(p_shop_id uuid, p_report_month date, p_request_id uuid)
+returns public.report_deliveries
+language plpgsql security definer set search_path = pg_catalog, public
+as $function$
+declare v_row public.report_deliveries%rowtype;
+begin
+  insert into public.report_deliveries(shop_id,report_month,request_id) values(p_shop_id,date_trunc('month',p_report_month)::date,p_request_id)
+  on conflict (shop_id,report_type,report_month) do update set status='processing',attempts=report_deliveries.attempts+1,request_id=excluded.request_id,last_error=null
+  where report_deliveries.status='failed'
+  returning * into v_row;
+  return v_row;
+end;
+$function$;
+
 -- 14. Row-level security
 alter table public.users enable row level security;
 alter table public.shops enable row level security;
@@ -1002,7 +1215,9 @@ alter table public.inventory enable row level security;
 alter table public.sales enable row level security;
 alter table public.sale_items enable row level security;
 alter table public.payments enable row level security;
+alter table public.payment_provider_events enable row level security;
 alter table public.inventory_movements enable row level security;
+alter table public.report_deliveries enable row level security;
 alter table public.audit_logs enable row level security;
 alter table public.receipt_counters enable row level security;
 
@@ -1093,8 +1308,9 @@ using (shop_id is not null and public.is_shop_owner(shop_id, auth.uid()));
 -- 15. Explicit grants
 revoke all on table public.users, public.shops, public.shop_memberships,
   public.products, public.inventory, public.sales, public.sale_items,
-  public.payments, public.inventory_movements, public.audit_logs,
+  public.payments, public.payment_provider_events, public.inventory_movements, public.audit_logs,
   public.receipt_counters, public.low_stock_alerts, public.daily_sales_summary
+  , public.report_deliveries
   from anon, authenticated;
 
 revoke all on function public.set_updated_at(),
@@ -1105,7 +1321,9 @@ revoke all on function public.set_updated_at(),
   public.is_shop_member(uuid, uuid), public.owner_can_access_user(uuid, uuid),
   public.next_receipt_number(uuid, date),
   public.adjust_inventory(uuid, numeric, text, text, uuid),
-  public.create_sale_with_items(jsonb, jsonb), public.audit_product_change(),
+  public.create_sale_with_items(jsonb, jsonb),
+  public.attach_stripe_payment_intent(uuid, text),
+  public.process_stripe_payment_event(text, text, text, bigint, text), public.audit_product_change(),
   public.audit_membership_change()
   from public, anon, authenticated;
 
@@ -1121,12 +1339,16 @@ grant insert, update on public.products to authenticated;
 grant update (full_name, phone, username, profile_completed) on public.users to authenticated;
 
 grant select on public.low_stock_alerts, public.daily_sales_summary to authenticated;
+grant execute on function public.get_shop_report(uuid,timestamptz,timestamptz) to authenticated, service_role;
+grant execute on function public.claim_report_delivery(uuid,date,uuid) to service_role;
 
 grant execute on function public.is_shop_owner(uuid, uuid) to authenticated;
 grant execute on function public.is_shop_member(uuid, uuid) to authenticated;
 grant execute on function public.owner_can_access_user(uuid, uuid) to authenticated;
 grant execute on function public.adjust_inventory(uuid, numeric, text, text, uuid) to authenticated;
 grant execute on function public.create_sale_with_items(jsonb, jsonb) to authenticated;
+grant execute on function public.attach_stripe_payment_intent(uuid, text) to authenticated;
+grant execute on function public.process_stripe_payment_event(text, text, text, bigint, text) to service_role;
 
 -- Internal functions are deliberately not granted to client roles.
 
