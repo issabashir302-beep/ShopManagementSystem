@@ -22,7 +22,12 @@ export function createShopRouter({ authService, shopService }) {
 
   router.post('/', authenticated, validate(validateShopCreate), asyncHandler(controller.create))
   router.get('/me', authenticated, asyncHandler(controller.getMe))
-  router.patch('/me', authenticated, validate(validateShopUpdate), asyncHandler(controller.updateMe))
+  router.patch(
+    '/me',
+    authenticated,
+    validate(validateShopUpdate),
+    asyncHandler(controller.updateMe)
+  )
 
   return router
 }

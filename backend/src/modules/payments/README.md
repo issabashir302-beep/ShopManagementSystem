@@ -2,12 +2,12 @@
 
 Payments are created only by the atomic checkout RPC. Their amount always equals the database-calculated sale total.
 
-| Method | Route | Auth | Purpose |
-|---|---|---|---|
-| GET | `/api/v1/sales/:saleId/payments` | Active member | Paginated payments for a current-shop sale |
-| GET | `/api/v1/payments/:paymentId` | Active member | Current-shop payment detail |
-| POST | `/api/v1/payments/stripe/create-intent` | Active member | Create or reuse the sale's Stripe PaymentIntent |
-| POST | `/api/v1/payments/stripe/webhook` | Stripe signature | Apply trusted Stripe status events |
+| Method | Route                                   | Auth             | Purpose                                         |
+| ------ | --------------------------------------- | ---------------- | ----------------------------------------------- |
+| GET    | `/api/v1/sales/:saleId/payments`        | Active member    | Paginated payments for a current-shop sale      |
+| GET    | `/api/v1/payments/:paymentId`           | Active member    | Current-shop payment detail                     |
+| POST   | `/api/v1/payments/stripe/create-intent` | Active member    | Create or reuse the sale's Stripe PaymentIntent |
+| POST   | `/api/v1/payments/stripe/webhook`       | Stripe signature | Apply trusted Stripe status events              |
 
 ## Status behavior
 

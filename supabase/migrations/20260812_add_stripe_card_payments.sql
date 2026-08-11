@@ -39,8 +39,9 @@ declare v_user_id uuid := auth.uid(); v_payment public.payments%rowtype; v_shop_
 begin
   if v_user_id is null then raise exception 'Authentication required'; end if;
   if nullif(btrim(p_provider_reference), '') is null then raise exception 'Stripe PaymentIntent reference is required'; end if;
-  select p, s.shop_id into v_payment, v_shop_id from public.payments p join public.sales s on s.id=p.sale_id
-    where p.id=p_payment_id for update of p;
+  select p.* into v_payment from public.payments p where p.id=p_payment_id for update;
+  if not found then raise exception 'Card payment was not found'; end if;
+  select s.shop_id into v_shop_id from public.sales s where s.id=v_payment.sale_id;
   if not found or not public.is_shop_member(v_shop_id,v_user_id) then raise exception 'Card payment was not found'; end if;
   if v_payment.method <> 'card' then raise exception 'Payment method is not card'; end if;
   if v_payment.status not in ('pending','failed') then raise exception 'Payment is not eligible for Stripe'; end if;
@@ -61,9 +62,11 @@ begin
   insert into public.payment_provider_events(event_id,provider,event_type,provider_reference)
     values(p_event_id,'stripe',p_payment_status,p_provider_reference) on conflict(event_id) do nothing;
   if not found then return jsonb_build_object('duplicate',true); end if;
-  select p,s into v_payment,v_sale from public.payments p join public.sales s on s.id=p.sale_id
-    where p.method='card' and p.provider_reference=p_provider_reference for update of p,s;
+  select p.* into v_payment from public.payments p
+    where p.method='card' and p.provider_reference=p_provider_reference for update;
   if not found then raise exception 'Stripe payment reference was not found'; end if;
+  select s.* into v_sale from public.sales s where s.id=v_payment.sale_id for update;
+  if not found then raise exception 'Stripe sale was not found'; end if;
   select upper(currency) into v_currency from public.shops where id=v_sale.shop_id;
   v_expected_minor:=case when v_currency in ('BIF','CLP','DJF','GNF','JPY','KMF','KRW','MGA','PYG','RWF','UGX','VND','VUV','XAF','XOF','XPF') then round(v_payment.amount)::bigint
     when v_currency in ('BHD','JOD','KWD','OMR','TND') then round(v_payment.amount*1000)::bigint else round(v_payment.amount*100)::bigint end;

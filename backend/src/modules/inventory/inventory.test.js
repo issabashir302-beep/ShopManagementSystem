@@ -4,38 +4,76 @@ import { InventoryRepository } from './inventory.repository.js'
 import { InventoryService } from './inventory.service.js'
 import { startTestServer } from '../../../tests/helpers/testServer.js'
 
-before(() => { process.env.NODE_ENV = 'test' })
+before(() => {
+  process.env.NODE_ENV = 'test'
+})
 const OWNER_ID = '10000000-0000-4000-8000-000000000001'
 const PRODUCT_ID = '50000000-0000-4000-8000-000000000005'
 const auth = { userId: OWNER_ID, token: 'token' }
 const product = {
-  id: PRODUCT_ID, name: 'Flour', sku: 'FLR', barcode: null, category: 'Food', unit: 'kg',
-  low_stock_threshold: '5.000', is_active: true, deleted_at: null
+  id: PRODUCT_ID,
+  name: 'Flour',
+  sku: 'FLR',
+  barcode: null,
+  category: 'Food',
+  unit: 'kg',
+  low_stock_threshold: '5.000',
+  is_active: true,
+  deleted_at: null
 }
 const balance = { product_id: PRODUCT_ID, quantity: '10.000', updated_at: 'now' }
 
 function fixture({ role = 'owner', foundProduct = product, adjustedBalance = balance } = {}) {
   let adjustment
   const inventoryRepository = {
-    async list(shopId) { assert.equal(shopId, 'shop-1'); return { rows: [{ product, balance }], count: 1 } },
+    async list(shopId) {
+      assert.equal(shopId, 'shop-1')
+      return { rows: [{ product, balance }], count: 1 }
+    },
     async lowStock(shopId) {
       assert.equal(shopId, 'shop-1')
-      return { rows: [{ ...product, product_id: PRODUCT_ID, quantity: '2.000', updated_at: 'now' }], count: 1 }
+      return {
+        rows: [{ ...product, product_id: PRODUCT_ID, quantity: '2.000', updated_at: 'now' }],
+        count: 1
+      }
     },
-    async findProduct(shopId) { assert.equal(shopId, 'shop-1'); return foundProduct },
-    async findBalance() { return balance },
+    async findProduct(shopId) {
+      assert.equal(shopId, 'shop-1')
+      return foundProduct
+    },
+    async findBalance() {
+      return balance
+    },
     async movements(shopId) {
       assert.equal(shopId, 'shop-1')
-      return { rows: [{ id: 'm1', product_id: PRODUCT_ID, movement_type: 'RESTOCK', quantity_change: '5.000', quantity_before: '5.000', quantity_after: '10.000', created_at: 'now' }], count: 1 }
+      return {
+        rows: [
+          {
+            id: 'm1',
+            product_id: PRODUCT_ID,
+            movement_type: 'RESTOCK',
+            quantity_change: '5.000',
+            quantity_before: '5.000',
+            quantity_after: '10.000',
+            created_at: 'now'
+          }
+        ],
+        count: 1
+      }
     },
-    async adjust(id, input) { adjustment = { id, input }; return adjustedBalance }
+    async adjust(id, input) {
+      adjustment = { id, input }
+      return adjustedBalance
+    }
   }
   return {
     service: new InventoryService({
       inventoryRepository,
-      shopService: { async getCurrentShopContext() {
-        return { shop: { id: 'shop-1', owner_id: OWNER_ID }, membership: { role } }
-      } },
+      shopService: {
+        async getCurrentShopContext() {
+          return { shop: { id: 'shop-1', owner_id: OWNER_ID }, membership: { role } }
+        }
+      },
       logger: { info() {} }
     }),
     adjustment: () => adjustment
@@ -70,24 +108,56 @@ describe('InventoryService', () => {
     it(`delegates ${movementType} atomically to repository RPC`, async () => {
       const value = fixture()
       const change = movementType === 'DAMAGE' ? '-1.000' : '5.000'
-      await value.service.adjust(auth, PRODUCT_ID, {
-        movementType, quantityChange: change, reason: 'Test adjustment', referenceId: null
-      }, 'req')
+      await value.service.adjust(
+        auth,
+        PRODUCT_ID,
+        {
+          movementType,
+          quantityChange: change,
+          reason: 'Test adjustment',
+          referenceId: null
+        },
+        'req'
+      )
       assert.equal(value.adjustment().id, PRODUCT_ID)
       assert.equal(value.adjustment().input.movementType, movementType)
     })
   }
 
   it('rejects shopkeeper manual adjustments before RPC', async () => {
-    await assert.rejects(() => fixture({ role: 'shopkeeper' }).service.adjust(auth, PRODUCT_ID, {
-      movementType: 'RESTOCK', quantityChange: '1', reason: 'Delivery', referenceId: null
-    }, 'req'), { code: 'FORBIDDEN' })
+    await assert.rejects(
+      () =>
+        fixture({ role: 'shopkeeper' }).service.adjust(
+          auth,
+          PRODUCT_ID,
+          {
+            movementType: 'RESTOCK',
+            quantityChange: '1',
+            reason: 'Delivery',
+            referenceId: null
+          },
+          'req'
+        ),
+      { code: 'FORBIDDEN' }
+    )
   })
 
   it('returns safe not-found for cross-shop product adjustment', async () => {
-    await assert.rejects(() => fixture({ foundProduct: null }).service.adjust(auth, PRODUCT_ID, {
-      movementType: 'RESTOCK', quantityChange: '1', reason: 'Delivery', referenceId: null
-    }, 'req'), { code: 'PRODUCT_NOT_FOUND' })
+    await assert.rejects(
+      () =>
+        fixture({ foundProduct: null }).service.adjust(
+          auth,
+          PRODUCT_ID,
+          {
+            movementType: 'RESTOCK',
+            quantityChange: '1',
+            reason: 'Delivery',
+            referenceId: null
+          },
+          'req'
+        ),
+      { code: 'PRODUCT_NOT_FOUND' }
+    )
   })
 })
 
@@ -95,11 +165,21 @@ describe('InventoryRepository RPC contract', () => {
   it('calls adjust_inventory once with exact database argument names', async () => {
     let called
     const repository = new InventoryRepository(() => ({
-      async rpc(name, args) { called = { name, args }; return { data: balance, error: null } }
+      async rpc(name, args) {
+        called = { name, args }
+        return { data: balance, error: null }
+      }
     }))
-    await repository.adjust(PRODUCT_ID, {
-      movementType: 'RESTOCK', quantityChange: '25.000', reason: 'Supplier delivery', referenceId: null
-    }, 'token')
+    await repository.adjust(
+      PRODUCT_ID,
+      {
+        movementType: 'RESTOCK',
+        quantityChange: '25.000',
+        reason: 'Supplier delivery',
+        referenceId: null
+      },
+      'token'
+    )
     assert.equal(called.name, 'adjust_inventory')
     assert.deepEqual(called.args, {
       p_product_id: PRODUCT_ID,
@@ -116,25 +196,47 @@ describe('InventoryRepository RPC contract', () => {
       ['Initial stock has already been recorded', 'INITIAL_STOCK_ALREADY_SET']
     ]) {
       const repository = new InventoryRepository(() => ({
-        async rpc() { return { data: null, error: { message } } }
+        async rpc() {
+          return { data: null, error: { message } }
+        }
       }))
-      await assert.rejects(() => repository.adjust(PRODUCT_ID, {
-        movementType: 'ADJUSTMENT', quantityChange: '-20', reason: 'Correction', referenceId: null
-      }, 'token'), { code })
+      await assert.rejects(
+        () =>
+          repository.adjust(
+            PRODUCT_ID,
+            {
+              movementType: 'ADJUSTMENT',
+              quantityChange: '-20',
+              reason: 'Correction',
+              referenceId: null
+            },
+            'token'
+          ),
+        { code }
+      )
     }
   })
 })
 
 describe('inventory API validation and safety', () => {
   let server
-  afterEach(async () => { if (server) await server.close(); server = null })
+  afterEach(async () => {
+    if (server) await server.close()
+    server = null
+  })
 
   it('requires authentication for inventory reads and writes', async () => {
     server = await startTestServer()
     assert.equal((await server.request('/api/v1/inventory')).response.status, 401)
-    assert.equal((await server.request(`/api/v1/products/${PRODUCT_ID}/inventory/adjustments`, {
-      method: 'POST', body: {}
-    })).response.status, 401)
+    assert.equal(
+      (
+        await server.request(`/api/v1/products/${PRODUCT_ID}/inventory/adjustments`, {
+          method: 'POST',
+          body: {}
+        })
+      ).response.status,
+      401
+    )
   })
 
   for (const [movementType, quantityChange, expected] of [
@@ -151,7 +253,9 @@ describe('inventory API validation and safety', () => {
     it(`validates ${movementType} ${quantityChange}`, async () => {
       server = await startTestServer()
       const result = await server.request(`/api/v1/products/${PRODUCT_ID}/inventory/adjustments`, {
-        method: 'POST', token: 'valid-token', body: { movementType, quantityChange, reason: 'Valid reason' }
+        method: 'POST',
+        token: 'valid-token',
+        body: { movementType, quantityChange, reason: 'Valid reason' }
       })
       assert.equal(result.response.status, expected)
     })
@@ -164,7 +268,9 @@ describe('inventory API validation and safety', () => {
       { movementType: 'RESTOCK', quantityChange: '1', reason: 'Delivery', quantity: '100' }
     ]) {
       const result = await server.request(`/api/v1/products/${PRODUCT_ID}/inventory/adjustments`, {
-        method: 'POST', token: 'valid-token', body
+        method: 'POST',
+        token: 'valid-token',
+        body
       })
       assert.equal(result.response.status, 400)
     }
@@ -173,7 +279,9 @@ describe('inventory API validation and safety', () => {
   it('has no direct quantity update endpoint', async () => {
     server = await startTestServer()
     const result = await server.request('/api/v1/inventory', {
-      method: 'PATCH', token: 'valid-token', body: { quantity: 100 }
+      method: 'PATCH',
+      token: 'valid-token',
+      body: { quantity: 100 }
     })
     assert.equal(result.response.status, 404)
   })

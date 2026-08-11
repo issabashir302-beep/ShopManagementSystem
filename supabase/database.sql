@@ -288,10 +288,15 @@ create unique index users_username_active_uq
   where username is not null and deleted_at is null;
 
 create index shops_owner_id_idx on public.shops (owner_id) where deleted_at is null;
+create unique index shops_one_active_per_owner_uq
+  on public.shops (owner_id) where deleted_at is null;
 
 create unique index shop_memberships_active_uq
   on public.shop_memberships (shop_id, user_id)
   where deleted_at is null;
+create unique index shop_memberships_one_active_shop_per_user_uq
+  on public.shop_memberships (user_id)
+  where deleted_at is null and is_active;
 create index shop_memberships_user_idx
   on public.shop_memberships (user_id, shop_id)
   where deleted_at is null and is_active;
@@ -955,12 +960,13 @@ begin
   if v_user_id is null then raise exception 'Authentication required'; end if;
   if nullif(btrim(p_provider_reference), '') is null then raise exception 'Stripe PaymentIntent reference is required'; end if;
 
-  select p, s.shop_id into v_payment, v_shop_id
+  select p.* into v_payment
   from public.payments p
-  join public.sales s on s.id = p.sale_id
   where p.id = p_payment_id
-  for update of p;
+  for update;
 
+  if not found then raise exception 'Card payment was not found'; end if;
+  select s.shop_id into v_shop_id from public.sales s where s.id = v_payment.sale_id;
   if not found or not public.is_shop_member(v_shop_id, v_user_id) then
     raise exception 'Card payment was not found';
   end if;
@@ -1007,12 +1013,14 @@ begin
   on conflict (event_id) do nothing;
   if not found then return jsonb_build_object('duplicate', true); end if;
 
-  select p, s into v_payment, v_sale
+  select p.* into v_payment
   from public.payments p
-  join public.sales s on s.id = p.sale_id
   where p.method = 'card' and p.provider_reference = p_provider_reference
-  for update of p, s;
+  for update;
   if not found then raise exception 'Stripe payment reference was not found'; end if;
+
+  select s.* into v_sale from public.sales s where s.id = v_payment.sale_id for update;
+  if not found then raise exception 'Stripe sale was not found'; end if;
 
   select upper(currency) into v_currency from public.shops where id = v_sale.shop_id;
   v_expected_minor := case
@@ -1193,16 +1201,15 @@ end;
 $function$;
 
 create or replace function public.claim_report_delivery(p_shop_id uuid, p_report_month date, p_request_id uuid)
-returns public.report_deliveries
+returns setof public.report_deliveries
 language plpgsql security definer set search_path = pg_catalog, public
 as $function$
-declare v_row public.report_deliveries%rowtype;
 begin
-  insert into public.report_deliveries(shop_id,report_month,request_id) values(p_shop_id,date_trunc('month',p_report_month)::date,p_request_id)
+  return query insert into public.report_deliveries(shop_id,report_month,request_id) values(p_shop_id,date_trunc('month',p_report_month)::date,p_request_id)
   on conflict (shop_id,report_type,report_month) do update set status='processing',attempts=report_deliveries.attempts+1,request_id=excluded.request_id,last_error=null
   where report_deliveries.status='failed'
-  returning * into v_row;
-  return v_row;
+     or (report_deliveries.status='processing' and report_deliveries.updated_at < now() - interval '30 minutes')
+  returning *;
 end;
 $function$;
 
@@ -1324,7 +1331,8 @@ revoke all on function public.set_updated_at(),
   public.create_sale_with_items(jsonb, jsonb),
   public.attach_stripe_payment_intent(uuid, text),
   public.process_stripe_payment_event(text, text, text, bigint, text), public.audit_product_change(),
-  public.audit_membership_change()
+  public.audit_membership_change(), public.get_shop_report(uuid,timestamptz,timestamptz),
+  public.claim_report_delivery(uuid,date,uuid)
   from public, anon, authenticated;
 
 grant select on public.users, public.shops, public.shop_memberships, public.products,

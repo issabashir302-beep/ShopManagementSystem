@@ -3,3 +3,7 @@
 assets/js/config.js
 node_modules/
 dist/
+coverage/
+logs/
+*.log
+*.tmp

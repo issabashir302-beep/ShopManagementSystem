@@ -35,7 +35,8 @@ export function validateShopUpdate(body) {
   }
 
   const result = {}
-  if ('name' in body) result.name = stringField(body.name, 'name', { required: true, min: 2, max: 120 })
+  if ('name' in body)
+    result.name = stringField(body.name, 'name', { required: true, min: 2, max: 120 })
   for (const [input, column, max] of [
     ['type', 'type', 80],
     ['location', 'location', 200],

@@ -19,9 +19,13 @@ function password(value, { enforceStrength }) {
     })
   }
   if (enforceStrength && (!/[A-Za-z]/.test(value) || !/\d/.test(value))) {
-    throw AppError.badRequest('VALIDATION_ERROR', 'password must contain at least one letter and one number', {
-      fields: ['password']
-    })
+    throw AppError.badRequest(
+      'VALIDATION_ERROR',
+      'password must contain at least one letter and one number',
+      {
+        fields: ['password']
+      }
+    )
   }
   return value
 }
@@ -51,6 +55,10 @@ export function validateRefresh(body) {
   requireObject(body)
   rejectUnknownFields(body, ['refreshToken'])
   return {
-    refreshToken: stringField(body.refreshToken, 'refreshToken', { required: true, min: 20, max: 4096 })
+    refreshToken: stringField(body.refreshToken, 'refreshToken', {
+      required: true,
+      min: 20,
+      max: 4096
+    })
   }
 }

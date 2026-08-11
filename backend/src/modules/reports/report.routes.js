@@ -4,9 +4,25 @@ import { asyncHandler } from '../../utils/asyncHandler.js'
 import { createReportController } from './report.controller.js'
 import { validateEmailRequest, validateReportPeriod } from './report.validation.js'
 export function createReportRouter({ authService, reportService, notificationService }) {
-  const router = Router(), controller = createReportController(reportService, notificationService), authenticated = requireAuth(authService)
-  const query = (req, _res, next) => { try { req.validatedQuery = validateReportPeriod(req.query); next() } catch (e) { next(e) } }
-  const body = (req, _res, next) => { try { req.validated = validateEmailRequest(req.body); next() } catch (e) { next(e) } }
+  const router = Router(),
+    controller = createReportController(reportService, notificationService),
+    authenticated = requireAuth(authService)
+  const query = (req, _res, next) => {
+    try {
+      req.validatedQuery = validateReportPeriod(req.query)
+      next()
+    } catch (e) {
+      next(e)
+    }
+  }
+  const body = (req, _res, next) => {
+    try {
+      req.validated = validateEmailRequest(req.body)
+      next()
+    } catch (e) {
+      next(e)
+    }
+  }
   router.get('/reports/daily-sales', authenticated, query, asyncHandler(controller.daily))
   router.get('/reports/monthly-sales', authenticated, query, asyncHandler(controller.monthly))
   router.get('/reports/products', authenticated, query, asyncHandler(controller.products))

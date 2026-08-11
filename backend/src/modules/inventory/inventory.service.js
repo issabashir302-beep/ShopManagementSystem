@@ -1,7 +1,8 @@
 import { AppError } from '../../errors/AppError.js'
 
 function publicInventory(product, balance) {
-  if (!balance) throw new AppError(500, 'INVENTORY_INCONSISTENT', 'Product inventory balance is missing')
+  if (!balance)
+    throw new AppError(500, 'INVENTORY_INCONSISTENT', 'Product inventory balance is missing')
   return {
     productId: product.id,
     name: product.name,
@@ -18,8 +19,14 @@ function publicInventory(product, balance) {
 
 function publicLowStock(row) {
   return {
-    productId: row.product_id, name: row.name, sku: row.sku, barcode: row.barcode, unit: row.unit,
-    quantity: row.quantity, lowStockThreshold: row.low_stock_threshold, isLowStock: true,
+    productId: row.product_id,
+    name: row.name,
+    sku: row.sku,
+    barcode: row.barcode,
+    unit: row.unit,
+    quantity: row.quantity,
+    lowStockThreshold: row.low_stock_threshold,
+    isLowStock: true,
     updatedAt: row.updated_at
   }
 }
@@ -44,7 +51,9 @@ function paginated(rows, count, filters, mapper) {
   return {
     items: rows.map(mapper),
     pagination: {
-      page: filters.page, pageSize: filters.pageSize, total: count,
+      page: filters.page,
+      pageSize: filters.pageSize,
+      total: count,
       totalPages: Math.ceil(count / filters.pageSize)
     }
   }
@@ -57,12 +66,16 @@ export class InventoryService {
     this.logger = logger
   }
 
-  async context(auth) { return this.shopService.getCurrentShopContext(auth) }
+  async context(auth) {
+    return this.shopService.getCurrentShopContext(auth)
+  }
 
   async list(auth, filters) {
     const context = await this.context(auth)
     const result = await this.inventoryRepository.list(context.shop.id, filters, auth.token)
-    return paginated(result.rows, result.count, filters, (row) => publicInventory(row.product, row.balance))
+    return paginated(result.rows, result.count, filters, (row) =>
+      publicInventory(row.product, row.balance)
+    )
   }
 
   async lowStock(auth, filters) {
@@ -73,7 +86,10 @@ export class InventoryService {
 
   async requireProduct(auth, productId, context) {
     const product = await this.inventoryRepository.findProduct(
-      context.shop.id, productId, auth.token, context.membership.role !== 'owner'
+      context.shop.id,
+      productId,
+      auth.token,
+      context.membership.role !== 'owner'
     )
     if (!product) throw AppError.notFound('PRODUCT_NOT_FOUND', 'Product was not found')
     return product
@@ -90,7 +106,12 @@ export class InventoryService {
   async movements(auth, productId, filters) {
     const context = await this.context(auth)
     await this.requireProduct(auth, productId, context)
-    const result = await this.inventoryRepository.movements(context.shop.id, productId, filters, auth.token)
+    const result = await this.inventoryRepository.movements(
+      context.shop.id,
+      productId,
+      filters,
+      auth.token
+    )
     return paginated(result.rows, result.count, filters, publicMovement)
   }
 
@@ -99,11 +120,19 @@ export class InventoryService {
     if (context.membership.role !== 'owner' || context.shop.owner_id !== auth.userId) {
       throw AppError.forbidden('Only the owner can adjust inventory')
     }
-    const product = await this.inventoryRepository.findProduct(context.shop.id, productId, auth.token, true)
+    const product = await this.inventoryRepository.findProduct(
+      context.shop.id,
+      productId,
+      auth.token,
+      true
+    )
     if (!product) throw AppError.notFound('PRODUCT_NOT_FOUND', 'Product was not found')
     const balance = await this.inventoryRepository.adjust(productId, adjustment, auth.token)
     this.logger.info('inventory_adjusted', {
-      requestId, shopId: context.shop.id, productId, movementType: adjustment.movementType
+      requestId,
+      shopId: context.shop.id,
+      productId,
+      movementType: adjustment.movementType
     })
     return publicInventory(product, balance)
   }

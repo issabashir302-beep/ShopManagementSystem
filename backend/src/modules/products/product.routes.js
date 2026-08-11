@@ -3,19 +3,37 @@ import { requireAuth } from '../../middleware/auth.middleware.js'
 import { asyncHandler } from '../../utils/asyncHandler.js'
 import { createProductController } from './product.controller.js'
 import {
-  validateProductCreate, validateProductId, validateProductList, validateProductUpdate
+  validateProductCreate,
+  validateProductId,
+  validateProductList,
+  validateProductUpdate
 } from './product.validation.js'
 
 function body(validator) {
   return (req, _res, next) => {
-    try { req.validated = validator(req.body); next() } catch (error) { next(error) }
+    try {
+      req.validated = validator(req.body)
+      next()
+    } catch (error) {
+      next(error)
+    }
   }
 }
 function id(req, _res, next) {
-  try { req.validatedId = validateProductId(req.params.productId); next() } catch (error) { next(error) }
+  try {
+    req.validatedId = validateProductId(req.params.productId)
+    next()
+  } catch (error) {
+    next(error)
+  }
 }
 function query(req, _res, next) {
-  try { req.validatedQuery = validateProductList(req.query); next() } catch (error) { next(error) }
+  try {
+    req.validatedQuery = validateProductList(req.query)
+    next()
+  } catch (error) {
+    next(error)
+  }
 }
 
 export function createProductRouter({ authService, productService }) {

@@ -1,9 +1,11 @@
 import { AppError } from '../../errors/AppError.js'
 
-const PROFILE_FIELDS = 'id, full_name, email, phone, username, user_role, profile_completed, created_at, updated_at'
+const PROFILE_FIELDS =
+  'id, full_name, email, phone, username, user_role, profile_completed, created_at, updated_at'
 
 function repositoryError(error) {
-  if (error?.code === '23505') return AppError.conflict('PROFILE_CONFLICT', 'Email or username is already in use')
+  if (error?.code === '23505')
+    return AppError.conflict('PROFILE_CONFLICT', 'Email or username is already in use')
   return new AppError(500, 'PROFILE_QUERY_FAILED', 'Unable to access user profile')
 }
 

@@ -1,6 +1,11 @@
 import { AppError } from '../../errors/AppError.js'
 import {
-  decimalField, positiveInteger, rejectUnknownFields, requireObject, stringField, uuidField
+  decimalField,
+  positiveInteger,
+  rejectUnknownFields,
+  requireObject,
+  stringField,
+  uuidField
 } from '../../utils/validation.js'
 
 const MANUAL_TYPES = new Set(['INITIAL_STOCK', 'RESTOCK', 'ADJUSTMENT', 'DAMAGE'])
@@ -29,21 +34,32 @@ export function validateMovementList(query) {
 export function validateAdjustment(body) {
   requireObject(body)
   rejectUnknownFields(body, ['movementType', 'quantityChange', 'reason', 'referenceId'])
-  const movementType = stringField(body.movementType, 'movementType', { required: true }).toUpperCase()
+  const movementType = stringField(body.movementType, 'movementType', {
+    required: true
+  }).toUpperCase()
   if (!MANUAL_TYPES.has(movementType)) {
     throw AppError.badRequest('INVALID_STOCK_ADJUSTMENT', 'Unsupported manual movement type', {
       fields: ['movementType']
     })
   }
   const quantityChange = decimalField(body.quantityChange, 'quantityChange', {
-    scale: 3, min: '-99999999999.999', allowNegative: true, nonZero: true
+    scale: 3,
+    min: '-99999999999.999',
+    allowNegative: true,
+    nonZero: true
   })
   const numeric = Number(quantityChange)
   if (['INITIAL_STOCK', 'RESTOCK'].includes(movementType) && numeric <= 0) {
-    throw AppError.badRequest('INVALID_STOCK_ADJUSTMENT', `${movementType} requires a positive quantityChange`)
+    throw AppError.badRequest(
+      'INVALID_STOCK_ADJUSTMENT',
+      `${movementType} requires a positive quantityChange`
+    )
   }
   if (movementType === 'DAMAGE' && numeric >= 0) {
-    throw AppError.badRequest('INVALID_STOCK_ADJUSTMENT', 'DAMAGE requires a negative quantityChange')
+    throw AppError.badRequest(
+      'INVALID_STOCK_ADJUSTMENT',
+      'DAMAGE requires a negative quantityChange'
+    )
   }
   return {
     movementType,
