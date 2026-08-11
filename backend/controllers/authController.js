@@ -2,50 +2,28 @@ import { supabase } from '../config/supabase.js'
 
 export const signup = async (req, res) => {
   const { email, password, full_name, role, phone } = req.body
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password
-  })
-
+  const { data, error } = await supabase.auth.signUp({email, password})
   if (error) return res.status(400).json(error)
-
   // create profile
-  await supabase.from('users').insert({
-    id: data.user.id,
-    full_name,
-    role,
-    phone
-  })
-
+  await supabase.from('users').insert({id: data.user.id,full_name, role, phone})
   res.json({ message: 'User created' })
 }
 
 export const login = async (req, res) => {
   const { email, password } = req.body
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  })
-
+  const { data, error } = await supabase.auth.signInWithPassword({email,password})
   if (error) return res.status(401).json(error)
-
   res.json(data)
 }
 
 export const logout = async (req, res) => {
-  // This endpoint signs the user out using the request-scoped Supabase client
   try {
     const { supabase } = req
-
     const { error } = await supabase.auth.signOut()
-
     if (error) {
       console.error('logout: supabase error:', error)
       return res.status(400).json({ error: error.message || error })
     }
-
     res.json({ message: 'Logged out' })
   } catch (err) {
     console.error('logout: unexpected error:', err)
@@ -57,27 +35,13 @@ export const logout = async (req, res) => {
 // authController.js
 export const getMe = async (req, res) => {
   const { supabase, user } = req
-
-  console.log('getMe: fetching profile for user id:', user && user.id)
-
   try {
-    // Use maybeSingle() to avoid the "Cannot coerce the result to a single JSON object" when
-    // the result set is empty. If multiple matching rows exist, Supabase will still return an error
-    // which we log and surface cleanly.
-    // Fetch basic profile fields (avoid selecting shop_id which may not exist on users table)
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, full_name, role, phone')
-      .eq('id', user.id)
-      .maybeSingle()
-
+    const { data, error } = await supabase.from('users').select('id, full_name, role, phone').eq('id', user.id).maybeSingle()
     if (error) {
       console.error('getMe: supabase error:', error)
       return res.status(500).json({ error: error.message })
     }
-
     let profile = data
-
     if (!profile) {
       console.warn('getMe: profile not found in users table for id:', user.id)
       profile = {
