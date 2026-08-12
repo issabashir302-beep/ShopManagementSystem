@@ -1,4 +1,15 @@
-export function requestLoggerMiddleware(logger) {
+import morgan from 'morgan'
+
+morgan.token('request-id', (req) => req.requestId ?? '-')
+
+const DEVELOPMENT_FORMAT =
+  ':method :url :status :response-time ms - :res[content-length] bytes [request :request-id]'
+
+export function requestLoggerMiddleware({ logger, nodeEnv }) {
+  if (nodeEnv === 'development') {
+    return morgan(DEVELOPMENT_FORMAT)
+  }
+
   return (req, res, next) => {
     const startedAt = process.hrtime.bigint()
     res.on('finish', () => {

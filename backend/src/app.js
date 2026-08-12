@@ -44,7 +44,7 @@ export function createApp({
 
   app.disable('x-powered-by')
   app.use(requestIdMiddleware)
-  app.use(requestLoggerMiddleware(logger))
+  app.use(requestLoggerMiddleware({ logger, nodeEnv: config.nodeEnv }))
   app.use(securityHeadersMiddleware(config.nodeEnv))
   app.use(
     cors({

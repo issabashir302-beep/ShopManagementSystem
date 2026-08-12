@@ -22,14 +22,14 @@ export function validateShopkeeperCreate(body) {
   }
   if (
     typeof body.password !== 'string' ||
-    body.password.length < 10 ||
+    body.password.length < 8 ||
     body.password.length > 128 ||
     !/[A-Za-z]/.test(body.password) ||
     !/\d/.test(body.password)
   ) {
     throw AppError.badRequest(
       'VALIDATION_ERROR',
-      'password must contain 10 to 128 characters, a letter, and a number',
+      'password must contain 8 to 128 characters, a letter, and a number',
       {
         fields: ['password']
       }

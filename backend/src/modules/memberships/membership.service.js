@@ -44,7 +44,7 @@ export class MembershipService {
     const authUser = await this.membershipRepository.createAuthUser(input)
 
     try {
-      const profile = await this.membershipRepository.findProfileAdmin(authUser.id)
+      const profile = await this.membershipRepository.reconcileShopkeeperProfile(authUser.id, input)
       if (!profile || profile.user_role !== 'shopkeeper') {
         throw new AppError(500, 'SHOPKEEPER_PROFILE_FAILED', 'Shopkeeper profile setup failed')
       }

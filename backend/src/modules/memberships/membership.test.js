@@ -40,7 +40,7 @@ function fixture({
     async createAuthUser() {
       return { id: KEEPER_ID }
     },
-    async findProfileAdmin() {
+    async reconcileShopkeeperProfile() {
       return profile
     },
     async createMembership() {
@@ -162,6 +162,42 @@ describe('MembershipRepository Auth contract', () => {
     assert.equal(attributes.app_metadata.user_role, 'shopkeeper')
     assert.equal(attributes.email_confirm, true)
   })
+
+  it('reconciles the trusted public profile to shopkeeper', async () => {
+    let update
+    const repository = new MembershipRepository({
+      forAccessToken() {},
+      adminClient: {
+        from() {
+          return {
+            update(value) {
+              update = value
+              return {
+                eq() {
+                  return this
+                },
+                is() {
+                  return this
+                },
+                select() {
+                  return this
+                },
+                async maybeSingle() {
+                  return { data: profile, error: null }
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+    await repository.reconcileShopkeeperProfile(KEEPER_ID, {
+      email: profile.email,
+      fullName: profile.full_name
+    })
+    assert.equal(update.user_role, 'shopkeeper')
+    assert.equal(update.email, profile.email)
+  })
 })
 
 describe('shopkeeper API security', () => {
@@ -174,6 +210,22 @@ describe('shopkeeper API security', () => {
   it('requires authentication', async () => {
     server = await startTestServer()
     assert.equal((await server.request('/api/v1/shopkeepers')).response.status, 401)
+  })
+
+  it('accepts an eight-character password and rejects seven characters', async () => {
+    server = await startTestServer()
+    const accepted = await server.request('/api/v1/shopkeepers', {
+      method: 'POST',
+      token: 'valid-token',
+      body: { email: 'cashier@example.com', password: 'Pass1234', fullName: 'Cashier' }
+    })
+    const rejected = await server.request('/api/v1/shopkeepers', {
+      method: 'POST',
+      token: 'valid-token',
+      body: { email: 'cashier@example.com', password: 'Pass123', fullName: 'Cashier' }
+    })
+    assert.equal(accepted.response.status, 201)
+    assert.equal(rejected.response.status, 400)
   })
 
   for (const field of ['role', 'userRole', 'shopId', 'shop_id', 'isActive']) {

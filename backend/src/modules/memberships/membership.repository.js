@@ -3,8 +3,12 @@ import { AppError } from '../../errors/AppError.js'
 function membershipError(error) {
   if (error?.code === '23505')
     return AppError.conflict('SHOPKEEPER_ALREADY_EXISTS', 'Shopkeeper already belongs to this shop')
-  if (error?.code === '42501') return AppError.forbidden()
-  return new AppError(500, 'MEMBERSHIP_QUERY_FAILED', 'Unable to access shopkeeper information')
+  const mapped =
+    error?.code === '42501'
+      ? AppError.forbidden()
+      : new AppError(500, 'MEMBERSHIP_QUERY_FAILED', 'Unable to access shopkeeper information')
+  mapped.cause = error
+  return mapped
 }
 
 export class MembershipRepository {
@@ -45,6 +49,24 @@ export class MembershipRepository {
       .from('users')
       .select('id, full_name, email, phone, username, user_role, created_at')
       .eq('id', userId)
+      .maybeSingle()
+    if (error) throw membershipError(error)
+    return data
+  }
+
+  async reconcileShopkeeperProfile(userId, input) {
+    const { data, error } = await this.adminClient
+      .from('users')
+      .update({
+        user_role: 'shopkeeper',
+        full_name: input.fullName,
+        email: input.email,
+        phone: input.phone ?? null,
+        username: input.username ?? null
+      })
+      .eq('id', userId)
+      .is('deleted_at', null)
+      .select('id, full_name, email, phone, username, user_role, created_at')
       .maybeSingle()
     if (error) throw membershipError(error)
     return data

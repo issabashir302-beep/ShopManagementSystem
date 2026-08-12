@@ -1,429 +1,152 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopwise | Owner Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-</head>
-
-<body>
-    <!-- Glass Sidebar -->
-    <aside class="glass-sidebar" id="sidebar">
-        <!-- Logo Section -->
-        <div class="sidebar-header">
-            <div class="logo-container">
-                <div class="logo-icon">
-                    <i class="fas fa-store"></i>
-                </div>
-                <div class="logo-text">
-                    <h1 class="logo-title">Shopwise</h1>
-                    <span class="logo-subtitle">Owner Dashboard</span>
-                </div>
-            </div>
-
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-chevron-left"></i>
-            </button>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Shopwise owner workspace" />
+    <title>Shopwise — Owner</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css" />
+    <link rel="stylesheet" href="../../assets/css/base.css" />
+    <link rel="stylesheet" href="../../assets/css/app.css" />
+    <link rel="stylesheet" href="../../assets/css/refinements.css" />
+    <link rel="stylesheet" href="../../assets/css/responsive.css" />
+  </head>
+  <body>
+    <div class="app-shell" id="appShell">
+      <div class="scrim" data-close-nav></div>
+      <aside class="sidebar" aria-label="Owner navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">S</div>
+          <div>
+            <div class="brand-name">Shopwise</div>
+            <div class="brand-sub">MiniPOS</div>
+          </div>
+          <button
+            class="sidebar-close"
+            data-close-nav
+            aria-label="Close navigation"
+          >
+            ×
+          </button>
         </div>
-
-        <!-- Simplified Navigation -->
-        <nav class="sidebar-nav">
-            <a href="owner.html" class="nav-item active" data-tooltip="Overview">
-                <div class="nav-icon">
-                    <i class="fas fa-home"></i>
-                </div>
-                <span class="nav-label">Overview</span>
-                <div class="nav-indicator"></div>
-            </a>
-            <a href="inventory.html" class="nav-item" data-tooltip="Inventory">
-                <div class="nav-icon">
-                    <i class="fas fa-boxes"></i>
-                </div>
-                <span class="nav-label">Inventory</span>
-            </a>
-            <a href="sales.html" class="nav-item" data-tooltip="Sales">
-                <div class="nav-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <span class="nav-label">Sales</span>
-            </a>
-            <a href="shopkeepers.html" class="nav-item" data-tooltip="Shopkeepers">
-                <div class="nav-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <span class="nav-label">Shopkeepers</span>
-            </a>
-        </nav>
-
-        <!-- User Profile -->
-        <div class="user-profile-card">
-            <div class="user-avatar">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Owner" alt="Owner">
+        <nav class="nav" id="ownerNav"></nav>
+        <div class="sidebar-user">
+          <div class="user-row">
+            <div class="avatar">AM</div>
+            <div class="user-meta">
+              <strong>Amina Mwangi</strong><span>Owner</span>
             </div>
-            <div class="user-info">
-                <h4 class="user-name" id="userName">Shop Owner</h4>
-                <span class="user-role" id="userEmail">owner@example.com</span>
-            </div>
-            <button class="quick-menu-btn" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
+            <a
+              class="btn btn-ghost btn-icon"
+              href="../auth/login.html"
+              aria-label="Sign out"
+              ><svg class="icon"><use href="#i-logout" /></svg
+            ></a>
+          </div>
         </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Top Header -->
-        <header class="glass-header">
-            <div class="header-left">
-                <button class="mobile-menu-btn" id="mobileMenuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="page-title">
-                    <h2 id="pageTitle">Overview Dashboard</h2>
-                    <span class="last-updated" id="lastUpdated">Updated just now</span>
-                </div>
-
-                <!-- Shop notice: shown when user has no shop -->
-                <div id="shopNotice" style="display: none; margin-top: 12px;">
-                    <div style="background: #fff3cd; color: #856404; padding: 10px 16px; border-radius: 8px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                        <div>
-                            <strong>No shop found.</strong>
-                            <div style="font-size: 0.9rem; opacity: 0.95;">You don't have a shop yet. Create one to start adding products.</div>
-                        </div>
-                        <div>
-                            <button id="openCreateShop" class="submit-btn">Create Shop</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="header-right">
-
-
-
-                <!-- Date -->
-                <div class="datetime-widget">
-                    <div class="date">
-                        <i class="far fa-calendar"></i>
-                        <span id="currentDate">Loading...</span>
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="daily-stats">
-                    <div class="stat-item today">
-                        <span class="stat-label">Today's Sales</span>
-                        <span class="stat-value">KSh 0</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Content Sections -->
-        <div class="content-sections">
-            <!-- Overview Section -->
-            <section id="overview" class="content-section active">
-                <!-- Add Product Form -->
-
-                <div class="form-section">
-                    <div class="form-header">
-                        <i class="fas fa-plus-circle"></i>
-                        <h3>Add New Product</h3>
-                    </div>
-
-                    <form id="addProductForm">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">Product Name *</label>
-                                <input type="text" class="form-input" name="productName"
-                                    placeholder="Enter product name" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">SKU Code *</label>
-                                <input type="text" class="form-input" name="sku" placeholder="e.g., PROD-001" required>
-                            </div>
-
-
-                            <div class="form-group">
-                                <label class="form-label">Current Stock *</label>
-                                <input type="number" class="form-input" name="stock" min="0" placeholder="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Unit *</label>
-                                <select class="form-input" name="unit" required>
-                                    <option value="">Select unit</option>
-                                    <option value="kg">Kilogram (kg)</option>
-                                    <option value="g">Gram (g)</option>
-                                    <option value="l">Liter (l)</option>
-                                    <option value="ml">Milliliter (ml)</option>
-                                    <option value="piece">Piece</option>
-                                    <option value="packet">Packet</option>
-                                    <option value="carton">Carton</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Buying Price (KES) *</label>
-                                <input type="number" class="form-input" name="buyPrice" min="0" step="0.01"
-                                    placeholder="0.00" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Selling Price (KES) *</label>
-                                <input type="number" class="form-input" name="sellPrice" min="0" step="0.01"
-                                    placeholder="0.00" required>
-                            </div>
-
-                            <!-- Unit Moved Here replacing Supplier -->
-
-                        </div>
-
-
-
-                        <div class="form-actions">
-                            <button type="reset" class="reset-btn">Clear Form</button>
-                            <button type="submit" class="submit-btn">
-                                <i class="fas fa-plus"></i>
-                                Add Product
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Sales Tracker -->
-                <div class="sales-tracker">
-                    <div class="form-header">
-                        <i class="fas fa-calendar-alt"></i>
-                        <h3>Sales Tracker</h3>
-                    </div>
-
-                    <div class="tracker-tabs">
-                        <button class="tracker-tab active" data-period="day">Today</button>
-                        <button class="tracker-tab" data-period="week">This Week</button>
-                        <button class="tracker-tab" data-period="month">This Month</button>
-                    </div>
-
-                    <div class="tracker-content active" id="day-tracker">
-                        <div class="tracker-stats">
-                            <div class="tracker-stat">
-                                <span class="stat-label">Opening Balance</span>
-                                <span class="stat-value">KSh 15,000</span>
-                            </div>
-                            <div class="tracker-stat">
-                                <span class="stat-label">Sales Total</span>
-                                <span class="stat-value">KSh 8,450</span>
-                            </div>
-                            <div class="tracker-stat">
-                                <span class="stat-label">Closing Balance</span>
-                                <span class="stat-value">KSh 23,450</span>
-                            </div>
-                        </div>
-
-                        <div class="table-container">
-                            <table class="tracker-table">
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Transaction ID</th>
-                                        <th>Amount (KES)</th>
-                                        <th>Items</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="day-sales-body">
-                                    <!-- Day sales populated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="tracker-content" id="week-tracker">
-                        <div class="tracker-stats">
-                            <div class="tracker-stat">
-                                <span class="stat-label">Week Opening</span>
-                                <span class="stat-value">KSh 45,000</span>
-                            </div>
-                            <div class="tracker-stat">
-                                <span class="stat-label">Week Sales</span>
-                                <span class="stat-value">KSh 38,450</span>
-                            </div>
-                            <div class="tracker-stat">
-                                <span class="stat-label">Week Closing</span>
-                                <span class="stat-value">KSh 83,450</span>
-                            </div>
-                        </div>
-
-                        <div class="table-container">
-                            <table class="tracker-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Day</th>
-                                        <th>Sales Total</th>
-                                        <th>Transactions</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="week-sales-body">
-                                    <!-- Week sales populated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="tracker-content" id="month-tracker">
-                        <div class="tracker-stats">
-                            <div class="tracker-stat">
-                                <span class="stat-label">Month Opening</span>
-                                <span class="stat-value">KSh 120,000</span>
-                            </div>
-                            <div class="tracker-stat">
-                                <span class="stat-label">Month Sales</span>
-                                <span class="stat-value">KSh 245,680</span>
-                            </div>
-                            <div class="tracker-stat">
-                                <span class="stat-label">Month Closing</span>
-                                <span class="stat-value">KSh 365,680</span>
-                            </div>
-                        </div>
-
-                        <div class="table-container">
-                            <table class="tracker-table">
-                                <thead>
-                                    <tr>
-                                        <th>Week</th>
-                                        <th>Date Range</th>
-                                        <th>Sales Total</th>
-                                        <th>Transactions</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="month-sales-body">
-                                    <!-- Month sales populated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-
-            </section>
-
-            </section>
+      </aside>
+      <header class="topbar">
+        <div class="topbar-actions">
+          <button
+            class="btn btn-ghost btn-icon mobile-menu"
+            data-open-nav
+            aria-label="Open navigation"
+          >
+            <svg class="icon"><use href="#i-menu" /></svg></button
+          ><span class="topbar-title" id="topbarTitle">Overview</span>
         </div>
+        <div class="topbar-actions">
+          <span class="muted" id="todayLabel"></span
+          ><button class="btn btn-ghost btn-icon" aria-label="Notifications">
+            <svg class="icon"><use href="#i-bell" /></svg>
+          </button>
+          <div class="avatar">AM</div>
         </div>
-
-
-    </main>
-
-    <!-- Toast Notification -->
-    <div class="toast-notification" id="toast">
-        <div class="toast-content">
-            <div class="toast-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="toast-message">
-                <h4>Success</h4>
-                <p>Action completed successfully</p>
-            </div>
-        </div>
-        <div class="toast-progress"></div>
+      </header>
+      <main class="main" id="pageContent" tabindex="-1"></main>
     </div>
-
-    <!-- Mobile Overlay -->
-    <div class="mobile-overlay" id="mobileOverlay"></div>
-
-    <!-- Create Shop Modal -->
-    <div class="modal" id="createShopModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div class="modal-content" style="background: var(--glass-bg); backdrop-filter: blur(12px); padding: 20px; border-radius: var(--radius-lg); width: 90%; max-width: 500px; border: 1px solid var(--glass-border);">
-            <div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                <h3 style="color: var(--text-primary);">Create Shop</h3>
-                <button class="modal-close" id="closeCreateShop" style="background: none; border: none; color: var(--text-secondary); cursor: pointer;"><i class="fas fa-times"></i></button>
-            </div>
-            <form id="createShopForm">
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label">Shop Name</label>
-                    <input type="text" class="form-input" name="name" placeholder="My Corner Shop" required>
-                </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label">Address</label>
-                    <input type="text" class="form-input" name="address" placeholder="123 Main St">
-                </div>
-                <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="reset-btn" id="cancelCreateShop">Cancel</button>
-                    <button type="submit" class="submit-btn" id="saveCreateShop">Create Shop</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-    <!-- Edit Product Modal -->
-    <div class="modal" id="editModal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div class="modal-content"
-            style="background: var(--glass-bg); backdrop-filter: blur(12px); padding: 20px; border-radius: var(--radius-lg); width: 90%; max-width: 500px; border: 1px solid var(--glass-border);">
-            <div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                <h3 style="color: var(--text-primary);">Edit Product</h3>
-                <button class="modal-close" id="closeEditModal"
-                    style="background: none; border: none; color: var(--text-secondary); cursor: pointer;"><i
-                        class="fas fa-times"></i></button>
-            </div>
-            <form id="editProductForm">
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Product
-                        Name</label>
-                    <input type="text" class="form-input" style="width: 100%;" value="Coca-Cola 330ml">
-                </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Stock</label>
-                    <input type="number" class="form-input" style="width: 100%;" value="24">
-                </div>
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px; color: var(--text-secondary);">Price (KES)</label>
-                    <input type="number" class="form-input" style="width: 100%;" value="50.00">
-                </div>
-                <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="reset-btn" id="cancelEdit">Cancel</button>
-                    <button type="submit" class="submit-btn" id="saveEdit">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal" id="deleteModal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div class="modal-content"
-            style="background: var(--glass-bg); backdrop-filter: blur(12px); padding: 20px; border-radius: var(--radius-lg); width: 90%; max-width: 400px; border: 1px solid var(--glass-border);">
-            <div class="modal-header" style="margin-bottom: 15px;">
-                <h3 style="color: var(--text-primary);">Confirm Deletion</h3>
-            </div>
-            <div class="modal-body" style="margin-bottom: 20px;">
-                <p style="color: var(--text-secondary);">Are you sure you want to delete this product? This action
-                    cannot be undone.</p>
-            </div>
-            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="reset-btn" id="cancelDelete">Cancel</button>
-                <button type="button" class="submit-btn" style="background: var(--danger);"
-                    id="confirmDelete">Delete</button>
-            </div>
-        </div>
-    </div>
-    </div>
-    </div>
-
-    </div>
-
-
-
-
-</body>
-
+    <div class="modal-backdrop" id="modalRoot" aria-hidden="true"></div>
+    <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+    <div id="receiptPrint"></div>
+    <svg class="sr-only" aria-hidden="true">
+      <defs>
+        <symbol id="i-menu" viewBox="0 0 24 24">
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        </symbol>
+        <symbol id="i-grid" viewBox="0 0 24 24">
+          <rect x="4" y="4" width="6" height="6" />
+          <rect x="14" y="4" width="6" height="6" />
+          <rect x="4" y="14" width="6" height="6" />
+          <rect x="14" y="14" width="6" height="6" />
+        </symbol>
+        <symbol id="i-box" viewBox="0 0 24 24">
+          <path d="m4 7 8-4 8 4-8 4-8-4Zm0 0v10l8 4 8-4V7M12 11v10" />
+        </symbol>
+        <symbol id="i-layers" viewBox="0 0 24 24">
+          <path d="m12 3-9 5 9 5 9-5-9-5Z" />
+          <path d="m3 12 9 5 9-5M3 16l9 5 9-5" />
+        </symbol>
+        <symbol id="i-receipt" viewBox="0 0 24 24">
+          <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+          <path d="M9 8h6M9 12h6" />
+        </symbol>
+        <symbol id="i-users" viewBox="0 0 24 24">
+          <path
+            d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+          />
+        </symbol>
+        <symbol id="i-chart" viewBox="0 0 24 24">
+          <path d="M4 19V9M10 19V5M16 19v-7M22 19H2" />
+        </symbol>
+        <symbol id="i-card" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 10h18" />
+        </symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.09A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3V9.6h.09A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.5 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.14.38.36.73.66 1 .3.28.68.42 1.09.4H21v4h-.09A1.7 1.7 0 0 0 19.4 15Z"
+          />
+        </symbol>
+        <symbol id="i-user" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-4-4" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-more" viewBox="0 0 24 24">
+          <circle cx="5" cy="12" r="1" fill="currentColor" />
+          <circle cx="12" cy="12" r="1" fill="currentColor" />
+          <circle cx="19" cy="12" r="1" fill="currentColor" />
+        </symbol>
+        <symbol id="i-x" viewBox="0 0 24 24">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </symbol>
+        <symbol id="i-bell" viewBox="0 0 24 24">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+        </symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24">
+          <path
+            d="M10 17l5-5-5-5M15 12H3M15 3h5a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-5"
+          />
+        </symbol>
+        <symbol id="i-print" viewBox="0 0 24 24">
+          <path
+            d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"
+          />
+        </symbol>
+      </defs>
+    </svg>
+    <script src="../../assets/js/api/config.js"></script>
+    <script src="../../assets/js/api/apiClient.js"></script>
+    <script src="../../assets/js/auth/session.js"></script>
+    <script src="../../assets/js/api/shopwiseApi.js"></script>
+    <script src="../../assets/js/ui/ui.js"></script>
+    <script src="../../assets/js/pages/owner.js"></script>
+  </body>
 </html>

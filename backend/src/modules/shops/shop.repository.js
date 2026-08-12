@@ -6,8 +6,12 @@ const SHOP_FIELDS =
 function shopError(error) {
   if (error?.code === '23505')
     return AppError.conflict('SHOP_ALREADY_EXISTS', 'This owner already has a shop')
-  if (error?.code === '42501') return AppError.forbidden()
-  return new AppError(500, 'SHOP_QUERY_FAILED', 'Unable to access shop information')
+  const mapped =
+    error?.code === '42501'
+      ? AppError.forbidden()
+      : new AppError(500, 'SHOP_QUERY_FAILED', 'Unable to access shop information')
+  mapped.cause = error
+  return mapped
 }
 
 export class ShopRepository {
