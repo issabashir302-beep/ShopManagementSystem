@@ -46,6 +46,24 @@ Design tokens live in `variables.css`. Shared buttons, forms, tables, statuses, 
 
 `assets/js/api/config.js` contains public browser configuration. `apiClient.js` handles the response envelope, Bearer tokens, one-time refresh retries, request IDs and shared errors. `shopwiseApi.js` is the canonical endpoint facade. `auth/session.js` derives roles from `/users/me`, guards workspaces and clears sessions safely.
 
-The default API URL is `http://localhost:5000/api/v1`. Serve this repository from an origin allowed by backend `CORS_ORIGINS` (the supplied development configuration includes port 5173). Add only a Stripe **test publishable key** to browser configuration; Stripe and Resend secrets remain backend-only.
+The frontend uses the deployed Railway API by default, including when opened through a local static server. To target another API, set `SHOPWISE_API_BASE_URL` when creating the production build. Add only a Stripe **publishable** key to the frontend build; Stripe and Resend secret keys remain backend-only.
+
+## Production build
+
+Build the safe static deployment artifact from the repository root:
+
+```powershell
+$env:STRIPE_PUBLISHABLE_KEY="pk_test_..."
+npm run build
+```
+
+The optional public build variables are:
+
+- `SHOPWISE_API_BASE_URL` overrides the default Railway API URL.
+- `STRIPE_PUBLISHABLE_KEY` enables Stripe Elements. Use `pk_test_...` while testing and `pk_live_...` only when the backend is also in live mode.
+
+The build creates `dist/` containing only `index.html`, `assets/`, and `pages/`. Configure Cloudflare Pages with build command `npm run build` and output directory `dist`. Never publish the repository root.
+
+After Cloudflare assigns a domain, add its exact HTTPS origin to the backend `CORS_ORIGINS` Railway variable and redeploy the backend.
 
 The production runtime contains no mock product, inventory, sales, payment or report data. Self-service public password recovery is not exposed by the backend; owner-requested shopkeeper recovery uses the supported endpoint.

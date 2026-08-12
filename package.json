@@ -1,33 +1,25 @@
 {
   "name": "shopmanagementsystem",
   "version": "1.0.0",
-  "description": "This is a system that is aimed to help the shopkeeper manage their shop operations easily tracking their inventry and allows shopkeepers be able to update it and  view producst in the inventory",
-  "main": "index.js",
+  "description": "Shopwise MiniPOS frontend workspace and backend command entry point",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server/index.js",
-    "dev": "nodemon server/index.js"
+    "build": "node scripts/build-frontend.js",
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "test": "npm --prefix backend test",
+    "test:integration": "npm --prefix backend run test:integration",
+    "lint": "npm --prefix backend run lint",
+    "format:check": "npm --prefix backend run format:check"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jjibrah/ShopManagementSystem.git"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/jjibrah/ShopManagementSystem/issues"
   },
-  "homepage": "https://github.com/jjibrah/ShopManagementSystem#readme",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.89.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.2.1",
-    "morgan": "^1.10.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.11"
-  }
+  "homepage": "https://github.com/jjibrah/ShopManagementSystem#readme"
 }
