@@ -181,6 +181,17 @@
 
   async function checkout() {
     if (state.processing || !state.cart.size) return;
+    if (state.payment === "cash") {
+      const cashInput = $("#cashReceived");
+      if (Number(cashInput?.value || 0) < totals().total) {
+        toast(
+          "Insufficient cash received",
+          "Cash received must cover the amount due.",
+        );
+        cashInput?.focus();
+        return;
+      }
+    }
     if (state.payment === "card" && !ShopwiseConfig.stripePublishableKey)
       return toast(
         "Card payments unavailable",
@@ -199,9 +210,25 @@
         })),
       });
       sessionStorage.removeItem("shopwise.checkoutRequest");
-      if (state.payment === "card") return await beginCardPayment(result);
-      showCheckoutResult(result);
+      // Checkout has already created the sale and deducted stock. Clear this
+      // logical cart before provider follow-up so it cannot be sold twice.
+      state.cart.clear();
+      renderCart();
       await refreshAfterCheckout();
+      if (state.payment === "card") {
+        try {
+          return await beginCardPayment(result);
+        } catch (error) {
+          showPendingSale(
+            result.sale.id,
+            "Card payment pending",
+            "The sale was recorded, but card setup could not be completed. Refresh the sale before taking another action.",
+          );
+          toast("Unable to start card payment", error.message);
+          return;
+        }
+      }
+      showCheckoutResult(result);
     } catch (error) {
       if (
         error.status >= 400 &&
@@ -289,7 +316,7 @@
         closeModal();
         toast(
           "Card payment failed",
-          "The cart has been retained. Review the sale before retrying.",
+          "The sale remains recorded. Ask an owner to review it before retrying.",
         );
         return;
       }

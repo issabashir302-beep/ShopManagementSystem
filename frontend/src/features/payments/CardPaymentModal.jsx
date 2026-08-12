@@ -1,0 +1,9 @@
+import { useState } from 'react'
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
+import { Modal } from '../../components/ui/Modal'
+import { Button } from '../../components/ui/Button'
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null
+export function CardPaymentModal({ clientSecret, saleId, onClose, onConfirmed }) { if (!clientSecret || !stripePromise) return null; return <Modal open onClose={onClose} title="Secure card payment"><Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#145c49', borderRadius: '8px' } } }}><CardForm saleId={saleId} onConfirmed={onConfirmed} /></Elements></Modal> }
+function CardForm({ saleId, onConfirmed }) { const stripe = useStripe(); const elements = useElements(); const [error, setError] = useState(''); const [loading, setLoading] = useState(false); const submit = async (event) => { event.preventDefault(); setLoading(true); setError(''); try { const result = await stripe.confirmPayment({ elements, redirect: 'if_required' }); if (result.error) { setError(result.error.message); return } await onConfirmed(saleId) } catch { setError('Confirmation could not be checked. The sale remains pending; review it before retrying.') } finally { setLoading(false) } }; return <form onSubmit={submit}><PaymentElement />{error && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}<p className="mt-4 text-xs text-gray-500">The Stripe webhook—not this browser—controls the persisted payment status.</p><Button className="mt-5 w-full" size="lg" loading={loading} disabled={!stripe || !elements}>Confirm card payment</Button></form> }

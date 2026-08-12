@@ -3,166 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Shopwise is a MiniPOS for small shops to manage sales, products, inventory, staff, and business reports."
-    />
-    <title>Shopwise MiniPOS | Simple shop management</title>
+    <meta name="description" content="Shopwise is a simple MiniPOS for managing sales, stock, staff, and reports." />
+    <title>Shopwise MiniPOS | Run your shop clearly</title>
     <link rel="stylesheet" href="/assets/css/variables.css" />
     <link rel="stylesheet" href="/assets/css/base.css" />
     <link rel="stylesheet" href="/assets/css/landing.css" />
   </head>
-  <body>
+  <body class="landing-page">
     <header class="site-header">
       <a class="wordmark" href="/" aria-label="Shopwise home">
-        <span class="wordmark-mark">S</span>
-        <span>Shopwise</span>
+        <span class="wordmark-mark">S</span><span>Shopwise</span>
       </a>
-      <nav class="site-nav" aria-label="Main navigation">
-        <a href="#features">Features</a>
-        <a href="/pages/info/about.html">About</a>
-        <a class="button button-secondary" href="/pages/auth/login.html"
-          >Sign in</a
-        >
-        <a class="button" href="/pages/auth/signup.html">Create account</a>
+      <nav class="site-nav" aria-label="Account navigation">
+        <a class="button button-quiet" href="/pages/auth/login.html">Sign in</a>
+        <a class="button" href="/pages/auth/signup.html">Get started</a>
       </nav>
     </header>
 
-    <main>
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">MiniPOS for independent shops</p>
-          <h1>Run your shop with a clearer view of every sale.</h1>
-          <p class="hero-summary">
-            Shopwise helps owners and shopkeepers record sales, manage stock,
-            monitor product performance, and understand the business from one
-            secure workspace.
-          </p>
-          <div class="hero-actions">
-            <a class="button button-large" href="/pages/auth/signup.html"
-              >Create your shop</a
-            >
-            <a
-              class="button button-secondary button-large"
-              href="/pages/auth/login.html"
-              >Sign in</a
-            >
-          </div>
-          <p class="trust-note">
-            Built for legitimate shop operations. Payment card details are
-            handled securely by Stripe and are not stored by Shopwise.
-          </p>
+    <main class="landing-main">
+      <section class="hero-copy">
+        <p class="eyebrow">MiniPOS for independent shops</p>
+        <h1>Your shop.<br /><span>Clear and connected.</span></h1>
+        <p class="hero-summary">
+          Sell faster, track every stock movement, manage your team, and
+          understand performance from one simple workspace.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-large" href="/pages/auth/signup.html">Create your shop <span aria-hidden="true">→</span></a>
+          <a class="text-link" href="/pages/auth/login.html">I already have an account</a>
         </div>
-        <div class="hero-panel" aria-label="Shopwise capabilities overview">
-          <div class="panel-heading">
-            <span>Today at a glance</span><span class="status-dot">Live</span>
-          </div>
-          <div class="metric-grid">
-            <article>
-              <span>Sales</span><strong>Track daily totals</strong>
-            </article>
-            <article>
-              <span>Inventory</span><strong>See stock levels</strong>
-            </article>
-            <article>
-              <span>Products</span><strong>Know top sellers</strong>
-            </article>
-            <article>
-              <span>Reports</span><strong>Review performance</strong>
-            </article>
-          </div>
-          <div class="activity-row">
-            <span class="activity-icon">✓</span>
-            <span
-              ><strong>One connected workflow</strong><br />From checkout to
-              monthly reporting</span
-            >
-          </div>
+        <div class="benefit-row">
+          <article><span>01</span><div><strong>Sell</strong><small>Cash, M-Pesa &amp; card</small></div></article>
+          <article><span>02</span><div><strong>Track</strong><small>Products &amp; live stock</small></div></article>
+          <article><span>03</span><div><strong>Understand</strong><small>Sales, profit &amp; reports</small></div></article>
         </div>
       </section>
 
-      <section class="section" id="features">
-        <div class="section-heading">
-          <p class="eyebrow">Core capabilities</p>
-          <h2>The essentials for everyday shop management</h2>
+      <section class="product-preview" aria-label="Shopwise product preview">
+        <div class="preview-window">
+          <div class="preview-topbar">
+            <span class="mini-wordmark"><b>S</b> Shopwise</span>
+            <span class="preview-user">Owner workspace</span>
+          </div>
+          <div class="preview-body">
+            <aside class="preview-sidebar">
+              <span class="active">Overview</span><span>Products</span><span>Inventory</span><span>Sales</span><span>Reports</span>
+            </aside>
+            <div class="preview-content">
+              <div class="preview-heading"><div><small>Today</small><strong>Shop overview</strong></div><span class="live-pill">Live</span></div>
+              <div class="metric-row">
+                <article><small>Sales</small><strong>KES 24,850</strong><span>12 transactions</span></article>
+                <article><small>Stock</small><strong>184 items</strong><span>4 running low</span></article>
+                <article><small>Profit</small><strong>KES 6,420</strong><span>Today</span></article>
+              </div>
+              <div class="preview-lower">
+                <div class="chart-card"><small>Sales activity</small><div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                <div class="stock-card"><small>Low stock</small><p><b>Cooking oil</b><span>2 left</span></p><p><b>Maize flour</b><span>4 left</span></p><p><b>Soap</b><span>5 left</span></p></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="feature-grid">
-          <article>
-            <span class="feature-number">01</span>
-            <h3>Point of sale</h3>
-            <p>
-              Record item quantities and supported payment methods in a focused
-              checkout flow.
-            </p>
-          </article>
-          <article>
-            <span class="feature-number">02</span>
-            <h3>Inventory control</h3>
-            <p>
-              Monitor current stock, record adjustments, and identify products
-              that are running low.
-            </p>
-          </article>
-          <article>
-            <span class="feature-number">03</span>
-            <h3>Business reports</h3>
-            <p>
-              Review sales, profit, payment methods, product performance, and
-              monthly summaries.
-            </p>
-          </article>
-          <article>
-            <span class="feature-number">04</span>
-            <h3>Role-based access</h3>
-            <p>
-              Give owners management controls while shopkeepers use the
-              operational POS workspace.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section assurance">
-        <div>
-          <p class="eyebrow">Designed with responsibility</p>
-          <h2>Your shop data stays scoped to your business.</h2>
-        </div>
-        <div class="assurance-copy">
-          <p>
-            Shopwise authenticates users through Supabase and enforces
-            shop-level access in the backend. Sensitive provider credentials are
-            never sent to the browser.
-          </p>
-          <a href="/pages/info/privacy.html">Read our privacy information →</a>
-        </div>
-      </section>
-
-      <section class="cta">
-        <div>
-          <p class="eyebrow">Ready to begin?</p>
-          <h2>Create your owner account and set up your shop.</h2>
-        </div>
-        <a
-          class="button button-light button-large"
-          href="/pages/auth/signup.html"
-          >Get started</a
-        >
+        <div class="floating-card floating-sale"><span>✓</span><div><strong>Sale recorded</strong><small>Stock updated automatically</small></div></div>
+        <div class="floating-card floating-role"><span>◎</span><div><strong>Role-based</strong><small>Owner + shopkeeper access</small></div></div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <div>
-        <a class="wordmark" href="/"
-          ><span class="wordmark-mark">S</span><span>Shopwise</span></a
-        >
-        <p>Practical MiniPOS software for independent shops.</p>
-      </div>
-      <nav aria-label="Legal and information">
-        <a href="/pages/info/about.html">About</a>
-        <a href="/pages/info/privacy.html">Privacy</a>
-        <a href="/pages/info/terms.html">Terms</a>
-        <a href="/pages/info/contact.html">Contact</a>
-      </nav>
+      <span>Practical shop management, without the clutter.</span>
+      <nav aria-label="Information"><a href="/pages/info/privacy.html">Privacy</a><a href="/pages/info/terms.html">Terms</a><a href="/pages/info/contact.html">Contact</a></nav>
     </footer>
   </body>
 </html>

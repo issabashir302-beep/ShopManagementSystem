@@ -1,0 +1,3 @@
+import { renderHook,act } from '@testing-library/react';import { describe,expect,it } from 'vitest';import { useCart } from './useCart'
+const products=[{id:'one',name:'Rice',stock:2,sellingPrice:'100'}]
+describe('useCart',()=>{it('adds, caps, decrements, removes, and totals cart lines',()=>{const {result}=renderHook(()=>useCart(products));act(()=>result.current.add(products[0]));act(()=>result.current.add(products[0]));act(()=>result.current.add(products[0]));expect(result.current.count).toBe(2);expect(result.current.total).toBe(200);act(()=>result.current.change(products[0],-1));expect(result.current.count).toBe(1);act(()=>result.current.remove('one'));expect(result.current.items).toEqual([])})})
