@@ -66,4 +66,8 @@ The build creates `dist/` containing only `index.html`, `assets/`, and `pages/`.
 
 After Cloudflare assigns a domain, add its exact HTTPS origin to the backend `CORS_ORIGINS` Railway variable and redeploy the backend.
 
+### Google Search Console verification
+
+For HTML-file verification, download the unique `google*.html` file from Search Console and place it in the repository root without changing its name or contents. The frontend build copies matching verification files directly into `dist/`, making the file available at `https://your-domain/google....html`. Commit and redeploy before clicking **Verify** in Search Console.
+
 The production runtime contains no mock product, inventory, sales, payment or report data. Self-service public password recovery is not exposed by the backend; owner-requested shopkeeper recovery uses the supported endpoint.

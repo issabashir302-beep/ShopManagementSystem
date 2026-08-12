@@ -3,13 +3,166 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0; url=/pages/auth/login.html" />
-    <title>Shopwise MiniPOS</title>
-    <script>
-      window.location.replace("/pages/auth/login.html");
-    </script>
+    <meta
+      name="description"
+      content="Shopwise is a MiniPOS for small shops to manage sales, products, inventory, staff, and business reports."
+    />
+    <title>Shopwise MiniPOS | Simple shop management</title>
+    <link rel="stylesheet" href="/assets/css/variables.css" />
+    <link rel="stylesheet" href="/assets/css/base.css" />
+    <link rel="stylesheet" href="/assets/css/landing.css" />
   </head>
   <body>
-    <p><a href="/pages/auth/login.html">Continue to Shopwise</a></p>
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="Shopwise home">
+        <span class="wordmark-mark">S</span>
+        <span>Shopwise</span>
+      </a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="/pages/info/about.html">About</a>
+        <a class="button button-secondary" href="/pages/auth/login.html"
+          >Sign in</a
+        >
+        <a class="button" href="/pages/auth/signup.html">Create account</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">MiniPOS for independent shops</p>
+          <h1>Run your shop with a clearer view of every sale.</h1>
+          <p class="hero-summary">
+            Shopwise helps owners and shopkeepers record sales, manage stock,
+            monitor product performance, and understand the business from one
+            secure workspace.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-large" href="/pages/auth/signup.html"
+              >Create your shop</a
+            >
+            <a
+              class="button button-secondary button-large"
+              href="/pages/auth/login.html"
+              >Sign in</a
+            >
+          </div>
+          <p class="trust-note">
+            Built for legitimate shop operations. Payment card details are
+            handled securely by Stripe and are not stored by Shopwise.
+          </p>
+        </div>
+        <div class="hero-panel" aria-label="Shopwise capabilities overview">
+          <div class="panel-heading">
+            <span>Today at a glance</span><span class="status-dot">Live</span>
+          </div>
+          <div class="metric-grid">
+            <article>
+              <span>Sales</span><strong>Track daily totals</strong>
+            </article>
+            <article>
+              <span>Inventory</span><strong>See stock levels</strong>
+            </article>
+            <article>
+              <span>Products</span><strong>Know top sellers</strong>
+            </article>
+            <article>
+              <span>Reports</span><strong>Review performance</strong>
+            </article>
+          </div>
+          <div class="activity-row">
+            <span class="activity-icon">✓</span>
+            <span
+              ><strong>One connected workflow</strong><br />From checkout to
+              monthly reporting</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="section-heading">
+          <p class="eyebrow">Core capabilities</p>
+          <h2>The essentials for everyday shop management</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <span class="feature-number">01</span>
+            <h3>Point of sale</h3>
+            <p>
+              Record item quantities and supported payment methods in a focused
+              checkout flow.
+            </p>
+          </article>
+          <article>
+            <span class="feature-number">02</span>
+            <h3>Inventory control</h3>
+            <p>
+              Monitor current stock, record adjustments, and identify products
+              that are running low.
+            </p>
+          </article>
+          <article>
+            <span class="feature-number">03</span>
+            <h3>Business reports</h3>
+            <p>
+              Review sales, profit, payment methods, product performance, and
+              monthly summaries.
+            </p>
+          </article>
+          <article>
+            <span class="feature-number">04</span>
+            <h3>Role-based access</h3>
+            <p>
+              Give owners management controls while shopkeepers use the
+              operational POS workspace.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section assurance">
+        <div>
+          <p class="eyebrow">Designed with responsibility</p>
+          <h2>Your shop data stays scoped to your business.</h2>
+        </div>
+        <div class="assurance-copy">
+          <p>
+            Shopwise authenticates users through Supabase and enforces
+            shop-level access in the backend. Sensitive provider credentials are
+            never sent to the browser.
+          </p>
+          <a href="/pages/info/privacy.html">Read our privacy information →</a>
+        </div>
+      </section>
+
+      <section class="cta">
+        <div>
+          <p class="eyebrow">Ready to begin?</p>
+          <h2>Create your owner account and set up your shop.</h2>
+        </div>
+        <a
+          class="button button-light button-large"
+          href="/pages/auth/signup.html"
+          >Get started</a
+        >
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="wordmark" href="/"
+          ><span class="wordmark-mark">S</span><span>Shopwise</span></a
+        >
+        <p>Practical MiniPOS software for independent shops.</p>
+      </div>
+      <nav aria-label="Legal and information">
+        <a href="/pages/info/about.html">About</a>
+        <a href="/pages/info/privacy.html">Privacy</a>
+        <a href="/pages/info/terms.html">Terms</a>
+        <a href="/pages/info/contact.html">Contact</a>
+      </nav>
+    </footer>
   </body>
 </html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Shopwise privacy information." />
+    <title>Privacy | Shopwise</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css" />
+    <link rel="stylesheet" href="../../assets/css/base.css" />
+    <link rel="stylesheet" href="../../assets/css/landing.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="/"
+        ><span class="wordmark-mark">S</span><span>Shopwise</span></a
+      >
+      <nav class="site-nav">
+        <a href="/">Home</a
+        ><a class="button button-secondary" href="../auth/login.html"
+          >Sign in</a
+        >
+      </nav>
+    </header>
+    <main class="info-main">
+      <p class="eyebrow">Privacy</p>
+      <h1>Privacy information</h1>
+      <p class="updated">Last updated: August 12, 2026</p>
+      <p>
+        Shopwise processes information needed to provide shop-management
+        functionality. This page describes the current application behavior and
+        is not a substitute for jurisdiction-specific legal advice.
+      </p>
+      <h2>Information processed</h2>
+      <ul>
+        <li>
+          Account information such as name, email address, and authentication
+          identifiers.
+        </li>
+        <li>
+          Shop, product, inventory, staff, sales, payment-status, return, and
+          report records entered through the service.
+        </li>
+        <li>
+          Operational information such as request identifiers, errors, and
+          security logs.
+        </li>
+      </ul>
+      <h2>How information is used</h2>
+      <p>
+        Information is used to authenticate users, enforce shop access, provide
+        requested MiniPOS features, process supported payments, generate
+        reports, deliver configured emails, prevent abuse, and diagnose service
+        problems.
+      </p>
+      <h2>Service providers</h2>
+      <p>
+        Shopwise currently relies on Supabase for authentication and database
+        services, Railway for backend hosting, Vercel for frontend hosting,
+        Stripe for card-payment processing, and Resend for report-email
+        delivery. Their handling of data is also governed by their respective
+        policies.
+      </p>
+      <h2>Payment information</h2>
+      <p>
+        Card details are collected by Stripe's browser components and are not
+        stored in the Shopwise database. Shopwise stores the business records
+        and provider references needed to reconcile payment status.
+      </p>
+      <h2>Access and security</h2>
+      <p>
+        Backend authorization and database policies scope business data to the
+        appropriate shop. No internet service can promise absolute security;
+        account holders should use unique passwords and protect their login
+        sessions.
+      </p>
+      <h2>Questions</h2>
+      <p>
+        For privacy questions, use the channel listed on the
+        <a href="contact.html">contact page</a>.
+      </p>
+    </main>
+  </body>
+</html>
