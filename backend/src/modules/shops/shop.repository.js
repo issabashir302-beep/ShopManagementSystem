@@ -1,11 +1,17 @@
 import { AppError } from '../../errors/AppError.js'
 
-const SHOP_FIELDS = 'id, owner_id, name, type, location, address, city, country, currency, created_at, updated_at'
+const SHOP_FIELDS =
+  'id, owner_id, name, type, location, address, city, country, currency, created_at, updated_at'
 
 function shopError(error) {
-  if (error?.code === '23505') return AppError.conflict('SHOP_ALREADY_EXISTS', 'This owner already has a shop')
-  if (error?.code === '42501') return AppError.forbidden()
-  return new AppError(500, 'SHOP_QUERY_FAILED', 'Unable to access shop information')
+  if (error?.code === '23505')
+    return AppError.conflict('SHOP_ALREADY_EXISTS', 'This owner already has a shop')
+  const mapped =
+    error?.code === '42501'
+      ? AppError.forbidden()
+      : new AppError(500, 'SHOP_QUERY_FAILED', 'Unable to access shop information')
+  mapped.cause = error
+  return mapped
 }
 
 export class ShopRepository {

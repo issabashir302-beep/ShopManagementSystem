@@ -24,7 +24,9 @@ export class ProductService {
     this.logger = logger
   }
 
-  async context(auth) { return this.shopService.getCurrentShopContext(auth) }
+  async context(auth) {
+    return this.shopService.getCurrentShopContext(auth)
+  }
 
   async create(auth, input, requestId) {
     const context = await this.context(auth)
@@ -32,7 +34,11 @@ export class ProductService {
       throw AppError.forbidden('Only the owner can create products')
     }
     const product = await this.productRepository.create(context.shop.id, input, auth.token)
-    this.logger.info('product_created', { requestId, shopId: context.shop.id, productId: product.id })
+    this.logger.info('product_created', {
+      requestId,
+      shopId: context.shop.id,
+      productId: product.id
+    })
     return publicProduct(product)
   }
 
@@ -45,7 +51,9 @@ export class ProductService {
     return {
       items: result.rows.map(publicProduct),
       pagination: {
-        page: filters.page, pageSize: filters.pageSize, total: result.count,
+        page: filters.page,
+        pageSize: filters.pageSize,
+        total: result.count,
         totalPages: Math.ceil(result.count / filters.pageSize)
       }
     }
@@ -65,7 +73,12 @@ export class ProductService {
     if (context.membership.role !== 'owner' || context.shop.owner_id !== auth.userId) {
       throw AppError.forbidden('Only the owner can update products')
     }
-    const product = await this.productRepository.update(context.shop.id, productId, changes, auth.token)
+    const product = await this.productRepository.update(
+      context.shop.id,
+      productId,
+      changes,
+      auth.token
+    )
     if (!product) throw AppError.notFound('PRODUCT_NOT_FOUND', 'Product was not found')
     this.logger.info('product_updated', { requestId, shopId: context.shop.id, productId })
     return publicProduct(product)

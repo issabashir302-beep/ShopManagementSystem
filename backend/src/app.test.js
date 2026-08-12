@@ -2,15 +2,22 @@ import assert from 'node:assert/strict'
 import { afterEach, before, describe, it } from 'node:test'
 import { startTestServer } from '../tests/helpers/testServer.js'
 
-before(() => { process.env.NODE_ENV = 'test' })
+before(() => {
+  process.env.NODE_ENV = 'test'
+})
 
 describe('application foundation', () => {
   let server
-  afterEach(async () => { if (server) await server.close(); server = null })
+  afterEach(async () => {
+    if (server) await server.close()
+    server = null
+  })
 
   it('serves health with a correlation ID and security headers', async () => {
     server = await startTestServer()
-    const result = await server.request('/api/v1/health', { headers: { 'x-request-id': 'trace-123' } })
+    const result = await server.request('/api/v1/health', {
+      headers: { 'x-request-id': 'trace-123' }
+    })
     assert.equal(result.response.status, 200)
     assert.equal(result.body.data.status, 'alive')
     assert.equal(result.body.requestId, 'trace-123')
@@ -22,9 +29,14 @@ describe('application foundation', () => {
     server = await startTestServer()
     const ready = await server.request('/api/v1/readiness')
     assert.equal(ready.response.status, 200)
-    await server.close(); server = null
+    await server.close()
+    server = null
 
-    server = await startTestServer({ readinessCheck: async () => { throw new Error('secret database detail') } })
+    server = await startTestServer({
+      readinessCheck: async () => {
+        throw new Error('secret database detail')
+      }
+    })
     const unavailable = await server.request('/api/v1/readiness')
     assert.equal(unavailable.response.status, 503)
     assert.equal(unavailable.body.error.code, 'DEPENDENCY_UNAVAILABLE')
@@ -41,8 +53,24 @@ describe('application foundation', () => {
 
   it('rejects disallowed browser origins', async () => {
     server = await startTestServer()
-    const result = await server.request('/api/v1/health', { headers: { origin: 'https://evil.example' } })
+    const result = await server.request('/api/v1/health', {
+      headers: { origin: 'https://evil.example' }
+    })
     assert.equal(result.response.status, 403)
     assert.equal(result.body.error.code, 'FORBIDDEN')
+  })
+
+  it('rate limits repeated authentication attempts with the standard error shape', async () => {
+    server = await startTestServer()
+    let result
+    for (let attempt = 0; attempt < 21; attempt += 1) {
+      result = await server.request('/api/v1/auth/login', {
+        method: 'POST',
+        body: { email: 'owner@example.com', password: 'password1' }
+      })
+    }
+    assert.equal(result.response.status, 429)
+    assert.equal(result.body.error.code, 'RATE_LIMITED')
+    assert.equal(typeof result.body.requestId, 'string')
   })
 })

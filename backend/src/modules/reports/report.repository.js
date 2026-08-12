@@ -6,10 +6,14 @@ function reportError(error) {
 }
 
 export class ReportRepository {
-  constructor(forAccessToken) { this.forAccessToken = forAccessToken }
+  constructor(forAccessToken) {
+    this.forAccessToken = forAccessToken
+  }
   async summary(shopId, start, end, token) {
     const { data, error } = await this.forAccessToken(token).rpc('get_shop_report', {
-      p_shop_id: shopId, p_start: start, p_end: end
+      p_shop_id: shopId,
+      p_start: start,
+      p_end: end
     })
     if (error) throw reportError(error)
     return data

@@ -33,7 +33,8 @@ export class ShopService {
     if (profile.user_role !== 'owner') throw AppError.forbidden('Only owners can create a shop')
 
     const existing = await this.shopRepository.findOwnedShops(auth.userId, auth.token)
-    if (existing.length) throw AppError.conflict('SHOP_ALREADY_EXISTS', 'This owner already has a shop')
+    if (existing.length)
+      throw AppError.conflict('SHOP_ALREADY_EXISTS', 'This owner already has a shop')
 
     const shop = await this.shopRepository.create({ ...input, owner_id: auth.userId }, auth.token)
     return toPublicShop(shop)
@@ -42,9 +43,13 @@ export class ShopService {
   async getCurrentShopContext(auth) {
     await this.requireProfile(auth)
     const memberships = await this.shopRepository.findMemberships(auth.userId, auth.token)
-    if (memberships.length === 0) throw AppError.notFound('SHOP_NOT_FOUND', 'No active shop is assigned to this user')
+    if (memberships.length === 0)
+      throw AppError.notFound('SHOP_NOT_FOUND', 'No active shop is assigned to this user')
     if (memberships.length > 1) {
-      throw AppError.conflict('MULTIPLE_SHOPS_NOT_SUPPORTED', 'MiniPOS supports one active shop per user')
+      throw AppError.conflict(
+        'MULTIPLE_SHOPS_NOT_SUPPORTED',
+        'MiniPOS supports one active shop per user'
+      )
     }
 
     const membership = memberships[0]

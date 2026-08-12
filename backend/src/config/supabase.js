@@ -10,7 +10,11 @@ const CLIENT_OPTIONS = {
 
 export function createSupabaseClients(config) {
   const publicClient = createClient(config.supabaseUrl, config.supabaseAnonKey, CLIENT_OPTIONS)
-  const adminClient = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, CLIENT_OPTIONS)
+  const adminClient = createClient(
+    config.supabaseUrl,
+    config.supabaseServiceRoleKey,
+    CLIENT_OPTIONS
+  )
 
   return Object.freeze({
     publicClient,

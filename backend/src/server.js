@@ -11,8 +11,12 @@ const server = app.listen(env.port, () => {
     environment: env.nodeEnv
   })
 })
-const scheduler = startScheduler({ expression: env.monthlyReportCron, timezone: env.appTimezone,
-  monthlyReportJob: dependencies.monthlyReportJob, logger: dependencies.logger })
+const scheduler = startScheduler({
+  expression: env.monthlyReportCron,
+  timezone: env.appTimezone,
+  monthlyReportJob: dependencies.monthlyReportJob,
+  logger: dependencies.logger
+})
 
 let shuttingDown = false
 function shutdown(signal) {
@@ -39,7 +43,9 @@ process.on('SIGTERM', () => shutdown('SIGTERM'))
 process.on('SIGINT', () => shutdown('SIGINT'))
 
 process.on('unhandledRejection', (error) => {
-  dependencies.logger.error('unhandled_rejection', { error: error instanceof Error ? error : new Error(String(error)) })
+  dependencies.logger.error('unhandled_rejection', {
+    error: error instanceof Error ? error : new Error(String(error))
+  })
 })
 
 process.on('uncaughtException', (error) => {

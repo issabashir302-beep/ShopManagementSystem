@@ -5,7 +5,17 @@ function safeError(error) {
   return {
     name: error.name,
     message: error.message,
-    ...(error.code ? { code: error.code } : {})
+    ...(error.code ? { code: error.code } : {}),
+    ...(error.cause
+      ? {
+          cause: {
+            message: error.cause.message,
+            ...(error.cause.code ? { code: error.cause.code } : {}),
+            ...(error.cause.details ? { details: error.cause.details } : {}),
+            ...(error.cause.hint ? { hint: error.cause.hint } : {})
+          }
+        }
+      : {})
   }
 }
 

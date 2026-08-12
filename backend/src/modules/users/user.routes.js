@@ -10,14 +10,19 @@ export function createUserRouter({ authService, userService }) {
   const authenticated = requireAuth(authService)
 
   router.get('/me', authenticated, asyncHandler(controller.getMe))
-  router.patch('/me', authenticated, (req, _res, next) => {
-    try {
-      req.validated = validateProfileUpdate(req.body)
-      next()
-    } catch (error) {
-      next(error)
-    }
-  }, asyncHandler(controller.updateMe))
+  router.patch(
+    '/me',
+    authenticated,
+    (req, _res, next) => {
+      try {
+        req.validated = validateProfileUpdate(req.body)
+        next()
+      } catch (error) {
+        next(error)
+      }
+    },
+    asyncHandler(controller.updateMe)
+  )
 
   return router
 }

@@ -14,31 +14,56 @@ import { createMembershipRouter } from './modules/memberships/membership.routes.
 import { createProductRouter } from './modules/products/product.routes.js'
 import { createInventoryRouter } from './modules/inventory/inventory.routes.js'
 import { createSaleRouter } from './modules/sales/sale.routes.js'
-import { createPaymentRouter, createStripeWebhookRouter } from './modules/payments/payment.routes.js'
+import {
+  createPaymentRouter,
+  createStripeWebhookRouter
+} from './modules/payments/payment.routes.js'
 import { createReportRouter } from './modules/reports/report.routes.js'
+import { createReturnRouter } from './modules/returns/return.routes.js'
+import { createRateLimiters, onlyMethods } from './middleware/rateLimit.middleware.js'
 
 export function createApp({
-  config, logger, authService, userService, shopService, membershipService,
-  productService, inventoryService, saleService, paymentService, reportService, notificationService, readinessCheck
+  config,
+  logger,
+  authService,
+  userService,
+  shopService,
+  membershipService,
+  productService,
+  inventoryService,
+  saleService,
+  paymentService,
+  reportService,
+  notificationService,
+  returnService,
+  readinessCheck
 }) {
   const app = express()
   const allowedOrigins = new Set(config.corsOrigins)
+  const rateLimits = createRateLimiters()
 
   app.disable('x-powered-by')
   app.use(requestIdMiddleware)
-  app.use(requestLoggerMiddleware(logger))
+  app.use(requestLoggerMiddleware({ logger, nodeEnv: config.nodeEnv }))
   app.use(securityHeadersMiddleware(config.nodeEnv))
-  app.use(cors({
-    credentials: false,
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.has('*') || allowedOrigins.has(origin.replace(/\/$/, ''))) {
-        return callback(null, true)
+  app.use(
+    cors({
+      credentials: false,
+      origin(origin, callback) {
+        if (!origin || allowedOrigins.has('*') || allowedOrigins.has(origin.replace(/\/$/, ''))) {
+          return callback(null, true)
+        }
+        return callback(AppError.forbidden('Origin is not allowed by CORS policy'))
       }
-      return callback(AppError.forbidden('Origin is not allowed by CORS policy'))
-    }
-  }))
+    })
+  )
   app.use(createStripeWebhookRouter(paymentService))
   app.use(express.json({ limit: '100kb' }))
+
+  app.use(['/api/v1/auth/signup', '/api/v1/auth/login'], rateLimits.auth)
+  app.use('/api/v1/shopkeepers', onlyMethods(['POST'], rateLimits.sensitiveWrite))
+  app.use('/api/v1/payments/stripe/create-intent', rateLimits.sensitiveWrite)
+  app.use('/api/v1/reports/monthly-summary/email', rateLimits.sensitiveWrite)
 
   app.get('/api/v1/health', (req, res) => sendSuccess(res, { status: 'alive' }))
   app.get('/api/v1/readiness', async (req, res, next) => {
@@ -59,6 +84,7 @@ export function createApp({
   app.use('/api/v1', createSaleRouter({ authService, saleService }))
   app.use('/api/v1', createPaymentRouter({ authService, paymentService }))
   app.use('/api/v1', createReportRouter({ authService, reportService, notificationService }))
+  app.use('/api/v1', createReturnRouter({ authService, returnService }))
 
   app.use(notFoundMiddleware)
   app.use(errorMiddleware({ logger, nodeEnv: config.nodeEnv }))

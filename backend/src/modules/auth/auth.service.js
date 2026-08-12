@@ -37,7 +37,10 @@ export class AuthService {
 
     if (error || !data.user) {
       if (error?.message?.toLowerCase().includes('already')) {
-        throw AppError.conflict('ACCOUNT_ALREADY_EXISTS', 'An account with this email already exists')
+        throw AppError.conflict(
+          'ACCOUNT_ALREADY_EXISTS',
+          'An account with this email already exists'
+        )
       }
       throw AppError.badRequest('SIGNUP_FAILED', 'Unable to create account')
     }
@@ -74,8 +77,11 @@ export class AuthService {
   }
 
   async refresh(refreshToken) {
-    const { data, error } = await this.publicClient.auth.refreshSession({ refresh_token: refreshToken })
-    if (error || !data.user || !data.session) throw AppError.unauthorized('Invalid or expired refresh token')
+    const { data, error } = await this.publicClient.auth.refreshSession({
+      refresh_token: refreshToken
+    })
+    if (error || !data.user || !data.session)
+      throw AppError.unauthorized('Invalid or expired refresh token')
     return publicSession(data.session, data.user)
   }
 

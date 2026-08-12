@@ -1,218 +1,128 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopwise | Login</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../admin/style.css">
-    <style>
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .auth-container {
-            width: 100%;
-            max-width: 400px;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-xl);
-            box-shadow: var(--shadow-xl);
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .auth-header {
-            text-align: center;
-            margin-bottom: var(--spacing-xl);
-        }
-
-        .auth-logo {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto var(--spacing-md);
-            color: white;
-            font-size: 1.5rem;
-            box-shadow: var(--shadow-md);
-        }
-
-        .auth-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: var(--spacing-xs);
-        }
-
-        .auth-subtitle {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .auth-footer {
-            margin-top: var(--spacing-lg);
-            text-align: center;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        .auth-link {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .auth-link:hover {
-            text-decoration: underline;
-        }
-
-        .submit-btn {
-            width: 100%;
-            margin-top: var(--spacing-sm);
-        }
-    </style>
-</head>
-
-<body>
-    <div class="auth-container">
-        <div class="auth-header">
-            <div class="auth-logo">
-                <i class="fas fa-store"></i>
-            </div>
-            <h1 class="auth-title">Welcome Back</h1>
-            <p class="auth-subtitle">Sign in to access your dashboard</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Sign in to your Shopwise retail workspace"
+    />
+    <title>Sign in — Shopwise</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css" />
+    <link rel="stylesheet" href="../../assets/css/base.css" />
+    <link rel="stylesheet" href="../../assets/css/auth.css" />
+    <link rel="stylesheet" href="../../assets/css/responsive.css" />
+  </head>
+  <body>
+    <main class="auth-page">
+      <aside class="auth-aside">
+        <div class="brand">
+          <div class="brand-mark">S</div>
+          <div>
+            <div class="brand-name">Shopwise</div>
+            <div class="brand-sub">MiniPOS</div>
+          </div>
         </div>
-
-        <form id="loginForm">
-            <div class="form-group" style="margin-bottom: var(--spacing-md);">
-                <label class="form-label">Email Address</label>
-                <div class="input-wrapper" style="position: relative;">
-                    <i class="far fa-envelope"
-                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                    <input type="email" class="form-input" style="padding-left: 40px; width: 100%;"
-                        placeholder="name@company.com" required>
-                </div>
+        <div class="auth-message">
+          <div class="auth-eyebrow">Made for everyday retail</div>
+          <h1>Run your shop with less friction.</h1>
+          <p>
+            One calm workspace for checkout, stock, staff and the numbers that
+            matter at the end of each day.
+          </p>
+          <div class="auth-points">
+            <div class="auth-point">
+              <span class="auth-check">✓</span>Fast counter checkout
             </div>
-
-            <div class="form-group" style="margin-bottom: var(--spacing-sm);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label class="form-label">Password</label>
-                    <a href="#" class="auth-link" style="font-size: 0.75rem;">Forgot password?</a>
-                </div>
-                <div class="input-wrapper" style="position: relative;">
-                    <i class="fas fa-lock"
-                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                    <input type="password" class="form-input" style="padding-left: 40px; width: 100%;"
-                        placeholder="••••••••" required>
-                </div>
+            <div class="auth-point">
+              <span class="auth-check">✓</span>Clear inventory control
             </div>
-
-            <button type="submit" class="submit-btn" style="margin-top: 24px;">
-                Sign In
+            <div class="auth-point">
+              <span class="auth-check">✓</span>Practical daily reporting
+            </div>
+            <div class="auth-point">
+              <span class="auth-check">✓</span>Simple staff access
+            </div>
+          </div>
+        </div>
+        <div class="auth-foot">
+          Shopwise MiniPOS · Built for independent shops
+        </div>
+      </aside>
+      <section class="auth-main">
+        <div class="auth-card">
+          <h1>Welcome back</h1>
+          <p>Sign in to continue to your shop workspace.</p>
+          <form
+            class="auth-form"
+            data-demo-auth
+            data-target="../admin/owner.html"
+          >
+            <div class="form-group">
+              <label for="email">Email address</label
+              ><input
+                class="input"
+                id="email"
+                type="email"
+                value="owner@greenmart.co.ke"
+                autocomplete="email"
+                inputmode="email"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <div class="password-row">
+                <label for="password">Password</label
+                ><a href="forgot-password.html">Forgot password?</a>
+              </div>
+              <div class="password-wrap">
+                <input
+                  class="input"
+                  id="password"
+                  type="password"
+                  value="shopwise-demo"
+                  autocomplete="current-password"
+                  required
+                /><button
+                  class="password-toggle"
+                  type="button"
+                  data-password-toggle="password"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+                    />
+                    <circle cx="12" cy="12" r="2.5" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="auth-options">
+              <label class="check-row"
+                ><input type="checkbox" />Keep me signed in</label
+              ><span>Private device only</span>
+            </div>
+            <button class="btn btn-primary" type="submit">
+              Sign in securely
             </button>
-        </form>
-
-        <div class="auth-footer">
-            Don't have an account? <a href="signup.html" class="auth-link">Sign up</a>
+          </form>
+          <div class="secure-note">
+            <svg viewBox="0 0 24 24">
+              <rect x="5" y="10" width="14" height="11" rx="2" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg
+            >Your session is protected on this device
+          </div>
+          <p class="auth-switch">
+            New shop owner? <a href="signup.html">Create an account</a>
+          </p>
         </div>
-    </div>
-
-    <script>
-  const loginForm = document.getElementById('loginForm')
-
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault()
-
-    const email = loginForm.querySelector('input[type="email"]').value.trim()
-    const password = loginForm.querySelector('input[type="password"]').value
-
-    try {
-      // 1️⃣ Login request
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        alert(data.error || 'Invalid login credentials')
-        return
-      }
-
-      // 2️⃣ Extract token
-      const accessToken = data.session.access_token
-      localStorage.setItem('access_token', accessToken)
-
-      // 3️⃣ Fetch user profile (role)
-      const profileRes = await fetch('http://localhost:5000/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
-
-      const profile = await profileRes.json()
-      console.log('Profile response:', profileRes.status, profile)
-
-      if (!profileRes.ok) {
-        // Show server-provided error if available for easier debugging
-        alert(profile.error || profile.message || JSON.stringify(profile) || 'Failed to load user profile')
-        return
-      }
-
-      // If profile is missing, send user to complete it
-      if (profile.profileMissing || !profile.role) {
-        alert('Your profile is incomplete. Please complete your profile.');
-        // Redirect to owner profile setup page
-        window.location.href = '/pages/admin/owner.html'
-        return
-      }
-
-      // 4️⃣ Redirect based on role
-      if (profile.role === 'owner') {
-        window.location.href = '/pages/admin/owner.html'
-      } else if (profile.role === 'shopkeeper') {
-        window.location.href = '/pages/shop/shopkeeper.html'
-      } else {
-        alert('Unknown user role')
-      }
-
-    } catch (err) {
-      console.error(err)
-      alert('Server error. Please try again.')
-    }
-  })
-</script>
-
-</body>
-
+      </section>
+    </main>
+    <script src="../../assets/js/api/config.js"></script>
+    <script src="../../assets/js/api/apiClient.js"></script>
+    <script src="../../assets/js/auth/session.js"></script>
+    <script src="../../assets/js/pages/auth.js"></script>
+  </body>
 </html>

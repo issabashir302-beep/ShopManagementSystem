@@ -7,9 +7,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test --test-isolation=none --test-concurrency=1",
+    "test": "node --test --test-isolation=none --test-concurrency=1 src/**/*.test.js",
+    "test:integration": "node --test --test-isolation=none --test-concurrency=1 tests/integration/*.integration.test.js",
     "test:coverage": "node --test --test-isolation=none --test-concurrency=1 --experimental-test-coverage",
-    "lint": "node --check server.js && node --check src/app.js && node --check src/server.js"
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -19,9 +22,17 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.2",
     "luxon": "^3.7.2",
+    "morgan": "^1.11.0",
     "node-cron": "^4.6.0",
     "resend": "^6.19.0",
     "stripe": "^22.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "globals": "^17.9.0",
+    "prettier": "^3.9.6"
   }
 }

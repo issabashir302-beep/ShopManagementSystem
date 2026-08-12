@@ -22,6 +22,8 @@ import { NotificationRepository } from './modules/notifications/notification.rep
 import { NotificationService } from './modules/notifications/notification.service.js'
 import { createResendClient } from './config/resend.js'
 import { createMonthlyReportJob } from './jobs/monthlyReport.job.js'
+import { ReturnRepository } from './modules/returns/return.repository.js'
+import { ReturnService } from './modules/returns/return.service.js'
 
 export function buildDependencies(config) {
   const logger = createLogger({ level: config.logLevel })
@@ -35,10 +37,17 @@ export function buildDependencies(config) {
   const productRepository = new ProductRepository(clients.forAccessToken)
   const inventoryRepository = new InventoryRepository(clients.forAccessToken)
   const saleRepository = new SaleRepository(clients.forAccessToken)
-  const paymentRepository = new PaymentRepository({ forAccessToken: clients.forAccessToken, adminClient: clients.adminClient })
+  const paymentRepository = new PaymentRepository({
+    forAccessToken: clients.forAccessToken,
+    adminClient: clients.adminClient
+  })
   const reportRepository = new ReportRepository(clients.forAccessToken)
   const notificationRepository = new NotificationRepository(clients.adminClient)
-  const stripeGateway = new StripeGateway({ secretKey: config.stripeSecretKey, webhookSecret: config.stripeWebhookSecret })
+  const returnRepository = new ReturnRepository(clients.forAccessToken)
+  const stripeGateway = new StripeGateway({
+    secretKey: config.stripeSecretKey,
+    webhookSecret: config.stripeWebhookSecret
+  })
 
   const authService = new AuthService({ ...clients, logger })
   const userService = new UserService(userRepository)
@@ -47,11 +56,28 @@ export function buildDependencies(config) {
   const productService = new ProductService({ productRepository, shopService, logger })
   const inventoryService = new InventoryService({ inventoryRepository, shopService, logger })
   const saleService = new SaleService({ saleRepository, shopService, logger })
-  const paymentService = new PaymentService({ paymentRepository, shopService, stripeGateway, logger })
-  const reportService = new ReportService({ reportRepository, shopService, timezone: config.appTimezone, logger })
-  const notificationService = new NotificationService({ repository: notificationRepository, reportService,
-    emailClient: createResendClient(config.resendApiKey), fromEmail: config.resendFromEmail, timezone: config.appTimezone, logger })
+  const paymentService = new PaymentService({
+    paymentRepository,
+    shopService,
+    stripeGateway,
+    logger
+  })
+  const reportService = new ReportService({
+    reportRepository,
+    shopService,
+    timezone: config.appTimezone,
+    logger
+  })
+  const notificationService = new NotificationService({
+    repository: notificationRepository,
+    reportService,
+    emailClient: createResendClient(config.resendApiKey),
+    fromEmail: config.resendFromEmail,
+    timezone: config.appTimezone,
+    logger
+  })
   const monthlyReportJob = createMonthlyReportJob(notificationService, logger)
+  const returnService = new ReturnService({ returnRepository, shopService, logger })
 
   const readinessCheck = async () => {
     const { error } = await clients.adminClient.from('users').select('id').limit(1)
@@ -59,7 +85,19 @@ export function buildDependencies(config) {
   }
 
   return {
-    logger, authService, userService, shopService, membershipService, productService,
-    inventoryService, saleService, paymentService, reportService, notificationService, monthlyReportJob, readinessCheck
+    logger,
+    authService,
+    userService,
+    shopService,
+    membershipService,
+    productService,
+    inventoryService,
+    saleService,
+    paymentService,
+    reportService,
+    notificationService,
+    returnService,
+    monthlyReportJob,
+    readinessCheck
   }
 }

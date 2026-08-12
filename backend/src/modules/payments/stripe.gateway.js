@@ -16,7 +16,9 @@ export class StripeGateway {
   }
 
   async retrievePaymentIntent(id) {
-    try { return await this.client.paymentIntents.retrieve(id) } catch {
+    try {
+      return await this.client.paymentIntents.retrieve(id)
+    } catch {
       throw new AppError(502, 'STRIPE_UNAVAILABLE', 'Unable to retrieve card payment')
     }
   }

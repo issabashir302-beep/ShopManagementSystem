@@ -7,13 +7,22 @@ export async function startTestServer(overrides = {}) {
 
   const authService = overrides.authService ?? {
     async verifyAccessToken(token) {
-      if (token !== 'valid-token') throw (await import('../../src/errors/AppError.js')).AppError.unauthorized()
+      if (token !== 'valid-token')
+        throw (await import('../../src/errors/AppError.js')).AppError.unauthorized()
       return { id: 'user-1', email: 'owner@example.com' }
     },
-    async signup(input) { return input },
-    async login(input) { return input },
-    async refresh() { return {} },
-    async logout() { return { message: 'Session revoked' } }
+    async signup(input) {
+      return input
+    },
+    async login(input) {
+      return input
+    },
+    async refresh() {
+      return {}
+    },
+    async logout() {
+      return { message: 'Session revoked' }
+    }
   }
 
   const app = createApp({
@@ -24,39 +33,120 @@ export async function startTestServer(overrides = {}) {
     logger: silentLogger,
     authService,
     userService: overrides.userService ?? {
-      async getOwnProfile() { return {} },
-      async updateOwnProfile(_auth, changes) { return changes }
+      async getOwnProfile() {
+        return {}
+      },
+      async updateOwnProfile(_auth, changes) {
+        return changes
+      }
     },
     shopService: overrides.shopService ?? {
-      async createShop(_auth, input) { return input },
-      async getCurrentShop() { return {} },
-      async updateCurrentShop(_auth, changes) { return changes }
+      async createShop(_auth, input) {
+        return input
+      },
+      async getCurrentShop() {
+        return {}
+      },
+      async updateCurrentShop(_auth, changes) {
+        return changes
+      }
     },
     membershipService: overrides.membershipService ?? {
-      async create(_auth, input) { return input }, async list() { return [] }, async get() { return {} },
-      async update(_auth, _id, input) { return input }, async updateStatus(_auth, _id, active) { return { isActive: active } },
-      async resetPassword() { return { message: 'Password reset instructions were requested' } }
+      async create(_auth, input) {
+        return input
+      },
+      async list() {
+        return []
+      },
+      async get() {
+        return {}
+      },
+      async update(_auth, _id, input) {
+        return input
+      },
+      async updateStatus(_auth, _id, active) {
+        return { isActive: active }
+      },
+      async resetPassword() {
+        return { message: 'Password reset instructions were requested' }
+      }
     },
     productService: overrides.productService ?? {
-      async create(_auth, input) { return input }, async list() { return { items: [] } }, async get() { return {} },
-      async update(_auth, _id, input) { return input }, async archive() { return { isActive: false } }
+      async create(_auth, input) {
+        return input
+      },
+      async list() {
+        return { items: [] }
+      },
+      async get() {
+        return {}
+      },
+      async update(_auth, _id, input) {
+        return input
+      },
+      async archive() {
+        return { isActive: false }
+      }
     },
     inventoryService: overrides.inventoryService ?? {
-      async list() { return { items: [] } }, async lowStock() { return { items: [] } }, async get() { return {} },
-      async movements() { return { items: [] } }, async adjust(_auth, _id, input) { return input }
+      async list() {
+        return { items: [] }
+      },
+      async lowStock() {
+        return { items: [] }
+      },
+      async get() {
+        return {}
+      },
+      async movements() {
+        return { items: [] }
+      },
+      async adjust(_auth, _id, input) {
+        return input
+      }
     },
     saleService: overrides.saleService ?? {
-      async checkout(_auth, input) { return input }, async list() { return { items: [] } }, async get() { return {} }
+      async checkout(_auth, input) {
+        return input
+      },
+      async list() {
+        return { items: [] }
+      },
+      async get() {
+        return {}
+      }
     },
     paymentService: overrides.paymentService ?? {
-      async listForSale() { return { items: [] } }, async get() { return {} },
-      async createStripeIntent() { return {} }, async handleStripeWebhook() { return { received: true } }
+      async listForSale() {
+        return { items: [] }
+      },
+      async get() {
+        return {}
+      },
+      async createStripeIntent() {
+        return {}
+      },
+      async handleStripeWebhook() {
+        return { received: true }
+      }
     },
     reportService: overrides.reportService ?? {
-      async generate() { return {} }
+      async generate() {
+        return {}
+      }
     },
     notificationService: overrides.notificationService ?? {
-      async sendManual() { return { sent: true } }
+      async sendManual() {
+        return { sent: true }
+      }
+    },
+    returnService: overrides.returnService ?? {
+      async voidSale(_auth, saleId) {
+        return { sale_id: saleId }
+      },
+      async createReturn(_auth, saleId) {
+        return { sale_id: saleId }
+      }
     },
     readinessCheck: overrides.readinessCheck ?? (async () => {})
   })
@@ -80,6 +170,7 @@ export async function startTestServer(overrides = {}) {
       })
       return { response, body: await response.json() }
     },
-    close: () => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))
+    close: () =>
+      new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())))
   }
 }

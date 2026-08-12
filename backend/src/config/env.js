@@ -61,9 +61,11 @@ export function parseEnv(source = process.env) {
   }
 
   const appTimezone = source.APP_TIMEZONE?.trim() || 'UTC'
-  if (!IANAZone.isValidZone(appTimezone)) throw new Error('APP_TIMEZONE must be a valid IANA timezone')
+  if (!IANAZone.isValidZone(appTimezone))
+    throw new Error('APP_TIMEZONE must be a valid IANA timezone')
   const monthlyReportCron = source.MONTHLY_REPORT_CRON?.trim() || '0 8 1 * *'
-  if (!cron.validate(monthlyReportCron)) throw new Error('MONTHLY_REPORT_CRON must be a valid cron expression')
+  if (!cron.validate(monthlyReportCron))
+    throw new Error('MONTHLY_REPORT_CRON must be a valid cron expression')
 
   return Object.freeze({
     nodeEnv,
@@ -75,7 +77,8 @@ export function parseEnv(source = process.env) {
     stripeWebhookSecret: required('STRIPE_WEBHOOK_SECRET', source),
     resendApiKey: required('RESEND_API_KEY', source),
     resendFromEmail: required('RESEND_FROM_EMAIL', source),
-    appTimezone, monthlyReportCron,
+    appTimezone,
+    monthlyReportCron,
     corsOrigins: Object.freeze(corsOrigins),
     logLevel
   })

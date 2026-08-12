@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Profile — Shopwise POS</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css" />
+    <link rel="stylesheet" href="../../assets/css/base.css" />
+    <link rel="stylesheet" href="../../assets/css/app.css" />
+    <link rel="stylesheet" href="../../assets/css/refinements.css" />
+    <link rel="stylesheet" href="../../assets/css/responsive.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a
+        class="brand"
+        style="
+          height: auto;
+          padding: 0;
+          border: 0;
+          color: var(--color-text-primary);
+        "
+        href="shopkeeper.html"
+        ><div class="brand-mark">S</div>
+        <div class="brand-name">Shopwise</div></a
+      ><a class="btn btn-secondary" href="shopkeeper.html">Return to POS</a>
+    </header>
+    <main class="main" style="max-width: 760px">
+      <div class="page-header">
+        <div>
+          <h1>Profile</h1>
+          <p>Your personal Shopwise details.</p>
+        </div>
+      </div>
+      <form class="card card-body" id="profileForm">
+        <div class="user-row" style="margin-bottom: 24px">
+          <div
+            class="avatar"
+            style="width: 54px; height: 54px; font-size: 17px"
+          >
+            MO
+          </div>
+          <div>
+            <h2>Miriam Otieno</h2>
+            <p class="muted">Shopkeeper · Greenmart Mini Market</p>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Full name</label
+            ><input class="input" value="Miriam Otieno" />
+          </div>
+          <div class="form-group">
+            <label>Username</label><input class="input" value="miriam.otieno" />
+          </div>
+          <div class="form-group">
+            <label>Email</label
+            ><input
+              class="input readonly"
+              readonly
+              value="miriam@greenmart.co.ke"
+            /><span class="help"
+              >Ask the shop owner to update your access email.</span
+            >
+          </div>
+          <div class="form-group">
+            <label>Phone</label><input class="input" value="+254 712 330 812" />
+          </div>
+        </div>
+        <div class="modal-footer" style="padding: 20px 0 0; margin-top: 20px">
+          <button class="btn btn-primary">Save changes</button>
+        </div>
+      </form>
+      <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+    </main>
+    <script src="../../assets/js/api/config.js"></script>
+    <script src="../../assets/js/api/apiClient.js"></script>
+    <script src="../../assets/js/auth/session.js"></script>
+    <script src="../../assets/js/api/shopwiseApi.js"></script>
+    <script src="../../assets/js/pages/profile.js"></script>
+  </body>
+</html>
