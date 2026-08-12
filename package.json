@@ -1,15 +1,19 @@
 {
   "name": "shopmanagementsystem",
   "version": "1.0.0",
-  "description": "Shopwise MiniPOS frontend workspace and backend command entry point",
+  "description": "Shopwise MiniPOS React frontend and Express backend workspace",
   "private": true,
   "scripts": {
-    "build": "node scripts/build-frontend.js",
+    "build": "npm --prefix frontend run build",
     "start": "npm --prefix backend start",
     "dev": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:legacy": "node scripts/build-frontend.js",
     "test": "npm --prefix backend test",
+    "test:frontend": "npm --prefix frontend test",
     "test:integration": "npm --prefix backend run test:integration",
     "lint": "npm --prefix backend run lint",
+    "lint:frontend": "npm --prefix frontend run lint",
     "format:check": "npm --prefix backend run format:check"
   },
   "repository": {

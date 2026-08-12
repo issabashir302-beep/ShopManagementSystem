@@ -1,100 +1,82 @@
-# ShopManagementSystem
+# Shopwise MiniPOS
 
-ShopManagementSystem is a simple web-based shop management and POS-style system designed to help shop owners and shopkeepers track products, monitor stock, record sales, and manage shop operations more easily.
+Shopwise is a React and Node.js MiniPOS for independent shops. Owners manage products, inventory, staff, sales, payments, returns, and reports; shopkeepers receive a focused checkout workspace.
 
-## Overview
+## Structure
 
-I find it had tracking the prices for my shop back at home so i built this system to help me track it.
-This project was built to solve the problem of manually tracking prices, inventory, and sales in a small shop. It provides a basic digital workflow for:
+- `frontend/` — canonical React/Vite/Tailwind application
+- `backend/` — Express REST API
+- `supabase/` — database schema and migrations
+- `assets/`, `pages/`, root `index.html` — legacy static frontend retained temporarily for rollback only
 
-- managing inventory
-- updating product details and stock levels
-- viewing low-stock items
-- recording sales
-- managing shop and shopkeeper accounts
+## Local development
 
-## Features
-
-- User authentication with signup, login, and logout
-- Role-based access for owners and shopkeepers
-- Product management for adding, updating, and deleting items
-- Inventory tracking with quantity and pricing information
-- Low-stock alert support
-- Sales creation and daily sales summary
-- Shop management and shopkeeper management
-
-## Tech Stack
-
-- Frontend: HTML, CSS, and JavaScript
-- Backend: Node.js with Express
-- Database/Auth: Supabase
-- Other libraries: CORS, dotenv, morgan
-
-## Project Structure
-
-- `backend/` - Express API, jobs, and backend tests
-- `supabase/` - canonical database schema and migrations
-- `assets/` and `pages/` - static frontend source
-- `scripts/build-frontend.js` - safe frontend-only production build
-- `dist/` - generated static deployment output (not committed)
-
-## Setup Instructions
-
-1. Install backend dependencies:
-
-   ```bash
-   cd backend
-   npm install
-   ```
-
-2. Create a .env file inside the backend folder with your Supabase configuration:
-
-   ```env
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   ```
-
-3. Start the backend server:
-
-   ```bash
-   npm run dev
-   ```
-
-4. Serve the repository root with a static server and open `/`. The root page redirects to the login screen.
-
-## Commands
-
-Run these from the repository root:
+Install each application once:
 
 ```powershell
-npm run dev              # backend development server
-npm test                 # backend unit tests
-npm run lint             # backend lint
-npm run test:integration # disposable Supabase integration suite
-npm run build            # frontend-only dist/ artifact
+npm --prefix backend install
+npm --prefix frontend install
+```
+
+Create `backend/.env` from `backend/.env.example`, and `frontend/.env` from `frontend/.env.example`.
+
+Run the API:
+
+```powershell
+npm run dev
+```
+
+Run the React frontend in a second terminal:
+
+```powershell
+npm run dev:frontend
+```
+
+Open `http://localhost:5174/`.
+
+## Verification
+
+```powershell
+npm test
+npm run lint
+npm run format:check
+npm run test:frontend
+npm run lint:frontend
+npm run build
 ```
 
 ## Deployment
 
-- Railway backend service root: `backend`
-- Railway start command: `npm start`
-- Railway health endpoint: `/api/v1/health`
-- Cloudflare Pages build command: `npm run build`
-- Cloudflare Pages output directory: `dist`
+Deploy two services from this repository in one Railway project. Railway recommends separate root directories for isolated monorepo applications.
 
-The frontend production build defaults to `https://brilliant-mercy-production-c94f.up.railway.app/api/v1`. Set the public Cloudflare build variable `STRIPE_PUBLISHABLE_KEY` to enable card entry. Set the backend Railway `CORS_ORIGINS` to the exact deployed frontend origin.
+### Frontend service
 
-Provider secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `RESEND_API_KEY`) belong only in Railway. See [backend/README.md](backend/README.md) and [frontend.md](frontend.md) for the full production checklist.
+- Root Directory: `/frontend`
+- Config file path: `/frontend/railway.toml`
+- Health endpoint: `/health`
+- Generate a public Railway domain
+- `VITE_API_URL=https://YOUR-BACKEND-DOMAIN/api/v1`
+- `VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...` (test mode until acceptance is complete)
 
-## Usage
+The production server serves `dist/` and falls back to `index.html`, so direct refreshes such as `/app/products` and `/pos` work.
 
-- Register or log in as a user
-- Create or manage your shop
-- Add products to inventory
-- Update stock and prices
-- Record sales and monitor daily performance
+### Backend service
 
-## Notes
+- Root Directory: `/backend`
+- Config file path: `/backend/railway.toml`
+- Health endpoint: `/api/v1/health`
+- Generate a public Railway domain
 
-This project is a practical starting point for a small shop management system and can be expanded with features such as receipts, reports, invoices, and payment integration.
+Set `NODE_ENV=production` and `CORS_ORIGINS=https://YOUR-FRONTEND-DOMAIN`. Add the existing Supabase, Stripe, Resend, timezone, and logging variables from `backend/.env.example` to this service only.
+
+After both domains exist, update `VITE_API_URL` and `CORS_ORIGINS`, then redeploy both services. Configure Stripe's test webhook destination as:
+
+```text
+https://YOUR-BACKEND-DOMAIN/api/v1/payments/stripe/webhook
+```
+
+Provider and database secrets belong only in the backend service. Never expose `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, or `RESEND_API_KEY` through `VITE_` variables.
+
+## Legacy frontend
+
+The root static frontend is no longer the canonical build. `npm run build:legacy` exists only as a temporary rollback path and should be removed together with the legacy files after browser acceptance testing succeeds.

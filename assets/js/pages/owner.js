@@ -177,7 +177,7 @@
       totals.totalSales ?? totals.grossRevenue ?? totals.revenue ?? 0;
     const profit = totals.grossProfit ?? 0;
     $("#pageContent").innerHTML =
-      `${pageHeader(`Good ${greeting()}, ${firstName()}`, `Live activity for ${escapeHtml(state.shop.name)}.`, '<a class="btn btn-secondary" href="../shop/shopkeeper.html">Open POS</a>')}<div class="stat-grid"><div class="card stat-card"><div class="stat-label">Today’s sales</div><div class="stat-value">${money(revenue)}</div><div class="stat-note">Authoritative completed sales</div></div><div class="card stat-card"><div class="stat-label">Transactions</div><div class="stat-value">${transactions}</div><div class="stat-note">Today</div></div><div class="card stat-card"><div class="stat-label">Gross profit</div><div class="stat-value">${money(profit)}</div><div class="stat-note">Sale-time cost snapshots</div></div><div class="card stat-card"><div class="stat-label">Low stock items</div><div class="stat-value warning">${lowStock.pagination.total}</div><div class="stat-note">At or below threshold</div></div></div><div class="dashboard-grid"><section class="card"><div class="card-header"><div><h2>Payment methods</h2><small>Completed payments today</small></div></div><div class="card-body bar-list">${renderBreakdown(daily.paymentMethods || daily.paymentBreakdown || [])}</div></section><section class="card"><div class="card-header"><div><h2>Low stock</h2><small>Needs attention</small></div><a href="#inventory">View inventory</a></div><div class="card-body stock-list">${lowStock.items.length ? lowStock.items.map((item) => `<div class="stock-item">${productCell(item)}<strong class="warning">${item.quantity} ${escapeHtml(item.unit)}</strong></div>`).join("") : '<p class="muted">No low-stock items.</p>'}</div></section></div>${salesTable("Recent sales", sales.items, sales.pagination)}`;
+      `${pageHeader(`Good ${greeting()}, ${firstName()}`, `Live activity for ${escapeHtml(state.shop.name)}.`, '<a class="btn btn-secondary" href="../shop/shopkeeper.html">Open POS</a>')}<div class="stat-grid"><div class="card stat-card"><div class="stat-label">Today’s sales</div><div class="stat-value">${money(revenue)}</div><div class="stat-note">Authoritative completed sales</div></div><div class="card stat-card"><div class="stat-label">Transactions</div><div class="stat-value">${transactions}</div><div class="stat-note">Today</div></div><div class="card stat-card"><div class="stat-label">Gross profit</div><div class="stat-value">${money(profit)}</div><div class="stat-note">Sale-time cost snapshots</div></div><div class="card stat-card"><div class="stat-label">Low stock items</div><div class="stat-value warning">${lowStock.pagination.total}</div><div class="stat-note">At or below threshold</div></div></div><div class="dashboard-grid"><section class="card"><div class="card-header"><div><h2>Payment methods</h2><small>Completed payments today</small></div></div><div class="card-body bar-list">${renderBreakdown(daily.paymentMethods || daily.paymentBreakdown || [])}</div></section><section class="card"><div class="card-header"><div><h2>Low stock</h2><small>Needs attention</small></div><a href="#inventory">View inventory</a></div><div class="card-body stock-list">${lowStock.items.length ? lowStock.items.map((item) => `<div class="stock-item">${productCell(item)}<strong class="warning">${item.quantity} ${escapeHtml(item.unit)}</strong></div>`).join("") : '<p class="muted">No low-stock items.</p>'}</div></section></div>${salesTable("Recent sales", sales.items)}`;
   }
 
   async function renderProducts(filters = {}) {
@@ -195,7 +195,7 @@
     const categories = [
       ...new Set(state.products.map((item) => item.category).filter(Boolean)),
     ];
-    return `<form class="toolbar" id="filterForm"><div class="field-inline">${icon("search")}<label class="sr-only" for="listSearch">Search products</label><input class="input" id="listSearch" name="search" value="${escapeHtml(filters.search || "")}" placeholder="Search name, SKU or barcode"></div><select class="select" name="category" aria-label="Category"><option value="">All categories</option>${categories.map((category) => `<option ${filters.category === category ? "selected" : ""}>${escapeHtml(category)}</option>`).join("")}</select><select class="select" name="status" aria-label="Status"><option value="all">All statuses</option><option value="active" ${filters.status === "active" ? "selected" : ""}>Active</option><option value="archived" ${filters.status === "archived" ? "selected" : ""}>Archived</option></select><button class="btn btn-secondary">Apply</button></form>`;
+    return `<form class="toolbar" id="filterForm"><div class="field-inline">${icon("search")}<label class="sr-only" for="listSearch">Search products</label><input class="input" id="listSearch" name="search" value="${escapeHtml(filters.search || "")}" placeholder="Search name, SKU or barcode"></div><select class="select" name="category" aria-label="Category"><option value="">All categories</option>${categories.map((category) => `<option ${filters.category === category ? "selected" : ""}>${escapeHtml(category)}</option>`).join("")}</select><select class="select" name="status" aria-label="Status"><option value="all" ${!filters.status || filters.status === "all" ? "selected" : ""}>All statuses</option><option value="active" ${filters.status === "active" ? "selected" : ""}>Active</option><option value="archived" ${filters.status === "archived" ? "selected" : ""}>Archived</option></select><button class="btn btn-secondary">Apply</button></form>`;
   }
 
   async function renderInventory(filters = {}) {
@@ -304,6 +304,19 @@
     if (action) return handleAction(action);
     const send = event.target.closest("[data-send-report]");
     if (send) return sendReport(send);
+    const page = event.target.closest("[data-page]");
+    if (page && !page.disabled) {
+      const route = location.hash.slice(1) || "overview";
+      const renderer = {
+        products: renderProducts,
+        inventory: renderInventory,
+        sales: renderSales,
+      }[route];
+      if (renderer) {
+        const filters = $("#filterForm") ? formObject($("#filterForm")) : {};
+        return renderer({ ...filters, page: Number(page.dataset.page) });
+      }
+    }
   }
 
   async function handleAction(button) {

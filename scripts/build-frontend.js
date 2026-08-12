@@ -1,4 +1,11 @@
-const { cp, mkdir, readFile, rm, writeFile } = require("node:fs/promises");
+const {
+  cp,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} = require("node:fs/promises");
 const path = require("node:path");
 
 const projectRoot = path.resolve(__dirname, "..");
@@ -35,6 +42,20 @@ async function buildFrontend() {
     ),
   ]);
 
+  const rootFiles = await readdir(projectRoot, { withFileTypes: true });
+  const googleVerificationFiles = rootFiles.filter(
+    (entry) => entry.isFile() && /^google[a-z0-9_-]+\.html$/iu.test(entry.name),
+  );
+
+  await Promise.all(
+    googleVerificationFiles.map((entry) =>
+      cp(
+        path.join(projectRoot, entry.name),
+        path.join(outputDirectory, entry.name),
+      ),
+    ),
+  );
+
   const configPath = path.join(
     outputDirectory,
     "assets",
@@ -58,6 +79,7 @@ async function buildFrontend() {
   console.log(
     `Stripe: ${stripePublishableKey ? "publishable key configured" : "not configured"}`,
   );
+  console.log(`Google verification files: ${googleVerificationFiles.length}`);
 }
 
 buildFrontend().catch((error) => {
