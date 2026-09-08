@@ -20,7 +20,7 @@ export const shopwiseApi = {
   },
   sales: {
     list: ({ page = 1, limit = 50, dateFrom, dateTo, soldBy, status } = {}) => api('/sales', { query: { page, limit, dateFrom: clean(dateFrom), dateTo: clean(dateTo), soldBy: clean(soldBy), status: clean(status) } }),
-    get: (id) => api(`/sales/${id}`), checkout: (body) => api('/checkout', { method: 'POST', body }), void: (id, reason) => api(`/sales/${id}/void`, { method: 'POST', body: { reason } }), returnItems: (id, items, reason) => api(`/sales/${id}/returns`, { method: 'POST', body: { items, reason } }),
+    get: (id) => api(`/sales/${id}`), checkout: (body) => api('/checkout', { method: 'POST', body, timeoutMs: 15000 }), void: (id, reason) => api(`/sales/${id}/void`, { method: 'POST', body: { reason } }), returnItems: (id, items, reason) => api(`/sales/${id}/returns`, { method: 'POST', body: { items, reason } }),
   },
   payments: { forSale: (id) => api(`/sales/${id}/payments`), get: (id) => api(`/payments/${id}`), intent: (saleId) => api('/payments/stripe/create-intent', { method: 'POST', body: { saleId } }) },
   reports: {

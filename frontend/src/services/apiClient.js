@@ -41,18 +41,20 @@ async function refreshSession() {
   return refreshRequest
 }
 
-export async function apiRequest(path, { method = 'GET', body, query, auth = true, retryAuth = true } = {}) {
+export async function apiRequest(path, { method = 'GET', body, query, auth = true, retryAuth = true, timeoutMs = 20000 } = {}) {
   const url = new URL(`${API_URL}${path.startsWith('/') ? path : `/${path}`}`)
   Object.entries(query || {}).forEach(([key, value]) => { if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, value) })
   const session = sessionStore.read()
   const headers = { Accept: 'application/json' }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   if (auth && session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    return await parseResponse(await fetch(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }))
+    return await parseResponse(await fetch(url, { method, headers, signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) }))
   } catch (error) {
     if (auth && retryAuth && error.status === 401 && session?.refreshToken) {
-      try { await refreshSession(); return apiRequest(path, { method, body, query, auth, retryAuth: false }) }
+      try { await refreshSession(); return apiRequest(path, { method, body, query, auth, retryAuth: false, timeoutMs }) }
       catch (refreshError) {
         // Losing connectivity during refresh is not the same as losing authorization.
         // Keep the cached identity/tokens so the POS can enter its controlled offline mode.
@@ -64,6 +66,8 @@ export async function apiRequest(path, { method = 'GET', body, query, auth = tru
       }
     }
     throw error
+  } finally {
+    clearTimeout(timeout)
   }
 }
 

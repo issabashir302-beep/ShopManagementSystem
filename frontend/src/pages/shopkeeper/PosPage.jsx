@@ -71,8 +71,12 @@ export function PosPage() {
       return shopwiseApi.sales.checkout(payload)
     },
     onSuccess: async (data) => {
-      request.current = null; cart.clear(); setMobileCart(false)
-      await Promise.all([queryClient.invalidateQueries({ queryKey: ['inventory'] }), ...(data.offline ? [] : [queryClient.invalidateQueries({ queryKey: ['sales'] })])])
+      request.current = null
+      cart.clear()
+      setCash('')
+      setMobileCart(false)
+      queryClient.invalidateQueries({ queryKey: ['inventory'] })
+      if (!data.offline) queryClient.invalidateQueries({ queryKey: ['sales'] })
       if (method === 'card') {
         try { const intent = await shopwiseApi.payments.intent(data.sale.id); setCard({ clientSecret: intent.clientSecret, saleId: data.sale.id }) }
         catch { setResult(data); toast.error('Card setup unavailable', 'The sale remains pending. Review it before retrying.') }
