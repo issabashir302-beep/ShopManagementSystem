@@ -1,4 +1,5 @@
 import { AppError } from '../../errors/AppError.js'
+import { generateInternalBarcode } from './barcode.js'
 
 function publicProduct(product) {
   return {
@@ -33,7 +34,11 @@ export class ProductService {
     if (context.membership.role !== 'owner' || context.shop.owner_id !== auth.userId) {
       throw AppError.forbidden('Only the owner can create products')
     }
-    const product = await this.productRepository.create(context.shop.id, input, auth.token)
+    const product = await this.productRepository.create(
+      context.shop.id,
+      { ...input, barcode: input.barcode || generateInternalBarcode() },
+      auth.token
+    )
     this.logger.info('product_created', {
       requestId,
       shopId: context.shop.id,
@@ -92,6 +97,21 @@ export class ProductService {
     const product = await this.productRepository.archive(context.shop.id, productId, auth.token)
     if (!product) throw AppError.notFound('PRODUCT_NOT_FOUND', 'Product was not found')
     this.logger.info('product_archived', { requestId, shopId: context.shop.id, productId })
+    return publicProduct(product)
+  }
+
+  async restore(auth, productId, requestId) {
+    const context = await this.context(auth)
+    if (context.membership.role !== 'owner' || context.shop.owner_id !== auth.userId) {
+      throw AppError.forbidden('Only the owner can restore products')
+    }
+    const product = await this.productRepository.restore(
+      context.shop.id,
+      productId,
+      auth.token
+    )
+    if (!product) throw AppError.notFound('PRODUCT_NOT_FOUND', 'Archived product was not found')
+    this.logger.info('product_restored', { requestId, shopId: context.shop.id, productId })
     return publicProduct(product)
   }
 }

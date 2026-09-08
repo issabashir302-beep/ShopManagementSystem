@@ -4,8 +4,14 @@ const FIELDS =
   'id, shop_id, name, sku, barcode, category, unit, buying_price, selling_price, low_stock_threshold, is_active, created_at, updated_at, deleted_at'
 
 function productError(error) {
-  if (error?.code === '23505')
+  if (error?.code === '23505') {
+    const detail = `${error.message || ''} ${error.details || ''}`.toLowerCase()
+    if (detail.includes('barcode'))
+      return AppError.conflict('BARCODE_ALREADY_EXISTS', 'This barcode is already assigned to another product in this shop')
+    if (detail.includes('sku'))
+      return AppError.conflict('SKU_ALREADY_EXISTS', 'This SKU is already assigned to another product in this shop')
     return AppError.conflict('PRODUCT_ALREADY_EXISTS', 'SKU or barcode already exists in this shop')
+  }
   if (error?.code === '42501') return AppError.forbidden()
   if (error?.code === '23514')
     return AppError.badRequest('INVALID_PRODUCT', 'Product violates a database constraint')
@@ -81,6 +87,19 @@ export class ProductRepository {
       .eq('id', productId)
       .eq('is_active', true)
       .is('deleted_at', null)
+      .select(FIELDS)
+      .maybeSingle()
+    if (error) throw productError(error)
+    return data
+  }
+
+  async restore(shopId, productId, token) {
+    const { data, error } = await this.forAccessToken(token)
+      .from('products')
+      .update({ is_active: true, deleted_at: null })
+      .eq('shop_id', shopId)
+      .eq('id', productId)
+      .eq('is_active', false)
       .select(FIELDS)
       .maybeSingle()
     if (error) throw productError(error)

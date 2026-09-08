@@ -12,6 +12,8 @@ export function createProductController(service) {
         await service.update(req.auth, req.validatedId, req.validated, req.requestId)
       ),
     archive: async (req, res) =>
-      sendSuccess(res, await service.archive(req.auth, req.validatedId, req.requestId))
+      sendSuccess(res, await service.archive(req.auth, req.validatedId, req.requestId)),
+    restore: async (req, res) =>
+      sendSuccess(res, await service.restore(req.auth, req.validatedId, req.requestId))
   }
 }

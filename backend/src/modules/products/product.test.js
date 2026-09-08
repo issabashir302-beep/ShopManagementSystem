@@ -31,6 +31,7 @@ function fixture({ role = 'owner', product = row, listRows = [row], error } = {}
   let created
   let updated
   let archived = false
+  let restored = false
   const productRepository = {
     async create(shopId, input) {
       created = { shopId, input }
@@ -52,6 +53,10 @@ function fixture({ role = 'owner', product = row, listRows = [row], error } = {}
     async archive(_shopId, _id) {
       archived = true
       return { ...product, is_active: false, deleted_at: 'now' }
+    },
+    async restore(_shopId, _id) {
+      restored = true
+      return { ...product, is_active: true, deleted_at: null }
     }
   }
   return {
@@ -66,7 +71,8 @@ function fixture({ role = 'owner', product = row, listRows = [row], error } = {}
     }),
     created: () => created,
     updated: () => updated,
-    archived: () => archived
+    archived: () => archived,
+    restored: () => restored
   }
 }
 
@@ -77,6 +83,7 @@ describe('ProductService', () => {
     assert.equal(result.id, PRODUCT_ID)
     assert.equal(value.created().shopId, 'shop-1')
     assert.equal('quantity' in value.created().input, false)
+    assert.match(value.created().input.barcode, /^20\d{11}$/)
   })
 
   it('rejects shopkeeper catalog writes', async () => {
@@ -88,6 +95,9 @@ describe('ProductService', () => {
       code: 'FORBIDDEN'
     })
     await assert.rejects(() => value.service.archive(auth, PRODUCT_ID, 'req'), {
+      code: 'FORBIDDEN'
+    })
+    await assert.rejects(() => value.service.restore(auth, PRODUCT_ID, 'req'), {
       code: 'FORBIDDEN'
     })
   })
@@ -128,6 +138,13 @@ describe('ProductService', () => {
     assert.deepEqual(value.updated().changes, { selling_price: '75.00' })
     assert.equal(value.archived(), true)
     assert.equal(archived.isActive, false)
+  })
+
+  it('restores an archived product for its owner', async () => {
+    const value = fixture()
+    const product = await value.service.restore(auth, PRODUCT_ID, 'req')
+    assert.equal(value.restored(), true)
+    assert.equal(product.isActive, true)
   })
 
   it('preserves duplicate SKU/barcode conflict', async () => {

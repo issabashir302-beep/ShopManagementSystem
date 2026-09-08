@@ -9,7 +9,7 @@ export const shopwiseApi = {
   shop: { get: () => syncShop(api('/shops/me')), create: (body) => syncShop(api('/shops', { method: 'POST', body })), update: (body) => syncShop(api('/shops/me', { method: 'PATCH', body })) },
   products: {
     list: ({ search, category, status = 'active', page = 1, pageSize = 50 } = {}) => api('/products', { query: { search: clean(search), category: clean(category), status, page, pageSize } }),
-    get: (id) => api(`/products/${id}`), create: (body) => api('/products', { method: 'POST', body }), update: (id, body) => api(`/products/${id}`, { method: 'PATCH', body }), archive: (id) => api(`/products/${id}`, { method: 'DELETE' }),
+    get: (id) => api(`/products/${id}`), create: (body) => api('/products', { method: 'POST', body }), update: (id, body) => api(`/products/${id}`, { method: 'PATCH', body }), archive: (id) => api(`/products/${id}`, { method: 'DELETE' }), restore: (id) => api(`/products/${id}/restore`, { method: 'POST' }),
   },
   inventory: {
     list: ({ search, category, page = 1, pageSize = 50 } = {}) => api('/inventory', { query: { search: clean(search), category: clean(category), page, pageSize } }),
