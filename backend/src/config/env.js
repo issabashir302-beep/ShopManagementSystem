@@ -35,7 +35,8 @@ export function parseEnv(source = process.env) {
     throw new Error('PORT must be an integer between 1 and 65535')
   }
 
-  const corsOrigins = required('CORS_ORIGINS', source)
+  const corsOrigins = (source.CORS_ORIGINS?.trim() ||
+    (nodeEnv === 'production' ? required('CORS_ORIGINS', source) : 'http://localhost:3000,http://localhost:5174'))
     .split(',')
     .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean)

@@ -12,8 +12,11 @@
 
 @layer base {
   * { border-color: #e2e8e4; }
-  body { @apply m-0 bg-[#f7f8f6] text-[#18211d] antialiased; }
+  html { min-width: 320px; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+  body { @apply m-0 bg-[#f7f8f6] text-[#18211d] antialiased; min-width: 320px; overflow-x: hidden; }
+  img, svg { max-width: 100%; }
   button, input, select, textarea { font: inherit; }
+  input, select, textarea { font-size: 16px; }
   button, a { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2; }
 }
 
@@ -21,8 +24,29 @@
   .control { @apply min-h-10 w-full rounded-lg border border-[#dce2de] bg-white px-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:bg-gray-50 disabled:text-gray-500; }
   .label { @apply mb-1.5 block text-sm font-semibold text-[#34423b]; }
   .card { @apply border border-[#e0e5e1] bg-white shadow-[0_1px_2px_rgba(18,33,26,.04)]; }
-  .table-wrap { @apply overflow-x-auto; }
+  .table-wrap { @apply max-w-full overflow-x-auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
   .data-table { @apply w-full min-w-[720px] border-collapse text-left text-sm; }
   .data-table th { @apply border-b bg-[#fafbfa] px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500; }
   .data-table td { @apply border-b px-4 py-3.5 align-middle; }
+}
+
+@media (max-width: 639px) {
+  .control { font-size: 16px; }
+  .card { border-radius: .75rem; }
+  .data-table { min-width: 640px; }
+  .data-table th { padding: .625rem .75rem; }
+  .data-table td { padding: .75rem; }
+}
+
+@media (pointer: coarse) {
+  button, a, select { min-height: 44px; }
+}
+
+@supports (padding: max(0px)) {
+  .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  .safe-top { padding-top: env(safe-area-inset-top); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }

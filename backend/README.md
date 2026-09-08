@@ -26,7 +26,7 @@ Each active feature follows route → validation/auth → controller → service
 
 ## Setup and commands
 
-Initialize a fresh Supabase project with `../supabase/database.sql`, copy `.env.example` to `.env`, and supply non-production development credentials.
+Initialize a fresh Supabase project with `../supabase/database.sql`, copy `.env.example` to `.env`, and supply non-production development credentials. The backend reads `backend/.env` (not a repository-root `.env`). Local CORS defaults to the frontend development and preview origins when `CORS_ORIGINS` is omitted.
 
 ```bash
 cd backend
