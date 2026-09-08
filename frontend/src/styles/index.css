@@ -50,3 +50,10 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+@media print {
+  body * { visibility: hidden !important; }
+  .barcode-print-area, .barcode-print-area * { visibility: visible !important; }
+  .barcode-print-area { position: absolute; inset: 0 auto auto 0; width: 58mm !important; border: 0 !important; padding: 3mm !important; }
+  @page { size: auto; margin: 0; }
+}

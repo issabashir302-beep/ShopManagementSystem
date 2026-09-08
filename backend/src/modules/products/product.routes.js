@@ -44,6 +44,7 @@ export function createProductRouter({ authService, productService }) {
   router.get('/', query, asyncHandler(controller.list))
   router.get('/:productId', id, asyncHandler(controller.get))
   router.patch('/:productId', id, body(validateProductUpdate), asyncHandler(controller.update))
+  router.post('/:productId/restore', id, asyncHandler(controller.restore))
   router.delete('/:productId', id, asyncHandler(controller.archive))
   return router
 }
