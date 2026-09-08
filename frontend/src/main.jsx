@@ -4,4 +4,8 @@ import { AppProviders } from './app/providers'
 import { AppRouter } from './app/router'
 import './styles/index.css'
 
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  addEventListener('load', () => navigator.serviceWorker.register('/sw.js'))
+}
+
 createRoot(document.getElementById('root')).render(<StrictMode><AppProviders><AppRouter /></AppProviders></StrictMode>)

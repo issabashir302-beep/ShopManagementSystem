@@ -1,0 +1,10 @@
+{
+  "name": "Shopwise MiniPOS",
+  "short_name": "Shopwise",
+  "description": "Practical point of sale and shop management",
+  "start_url": "/pos",
+  "display": "standalone",
+  "background_color": "#f5f7f5",
+  "theme_color": "#145c49",
+  "icons": [{ "src": "/shopwise-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

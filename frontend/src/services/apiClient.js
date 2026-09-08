@@ -53,11 +53,29 @@ export async function apiRequest(path, { method = 'GET', body, query, auth = tru
   } catch (error) {
     if (auth && retryAuth && error.status === 401 && session?.refreshToken) {
       try { await refreshSession(); return apiRequest(path, { method, body, query, auth, retryAuth: false }) }
-      catch (refreshError) { sessionStore.clear(); window.dispatchEvent(new Event('shopwise:session-expired')); throw refreshError }
+      catch (refreshError) {
+        // Losing connectivity during refresh is not the same as losing authorization.
+        // Keep the cached identity/tokens so the POS can enter its controlled offline mode.
+        if (refreshError.status === 401 || refreshError.status === 403 || refreshError.code === 'UNAUTHENTICATED') {
+          sessionStore.clear()
+          window.dispatchEvent(new Event('shopwise:session-expired'))
+        }
+        throw refreshError
+      }
     }
     throw error
   }
 }
 
 export const api = (path, options) => apiRequest(path, options).then(({ data }) => data)
+export async function dependenciesReady(timeoutMs = 2000) {
+  if (!navigator.onLine) return false
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const response = await fetch(`${API_URL}/readiness`, { signal: controller.signal, headers: { Accept: 'application/json' } })
+    return response.ok
+  } catch { return false }
+  finally { clearTimeout(timeout) }
+}
 export { refreshSession }

@@ -12,7 +12,10 @@ import { checkoutFingerprint, checkoutPayload } from '../../features/pos/checkou
 import { CardPaymentModal } from '../../features/payments/CardPaymentModal'
 import { pollPaymentStatus } from '../../features/payments/pollPayment'
 import { CameraScanner } from '../../features/barcode/CameraScanner'
+import { cachedRequest, offlineStore, provisionalReference } from '../../features/offline/offlineStore'
 import { money } from '../../utils/format'
+import { useAuth } from '../../features/auth/AuthContext'
+import { dependenciesReady } from '../../services/apiClient'
 
 export function PosPage() {
   const [search, setSearch] = useState('')
@@ -25,9 +28,12 @@ export function PosPage() {
   const request = useRef(null)
   const queryClient = useQueryClient()
   const toast = useToast()
+  const auth = useAuth()
+  const userId = auth.user?.id
+  const inventoryCacheKey = `inventory:${userId}`
   const [productsQuery, inventoryQuery] = useQueries({ queries: [
-    { queryKey: ['products', 'pos'], queryFn: () => shopwiseApi.products.list({ status: 'active', pageSize: 100 }) },
-    { queryKey: ['inventory', 'pos'], queryFn: () => shopwiseApi.inventory.list({ pageSize: 100 }) },
+    { queryKey: ['products', 'pos'], queryFn: () => cachedRequest(`products:${userId}`, () => shopwiseApi.products.list({ status: 'active', pageSize: 100 })) },
+    { queryKey: ['inventory', 'pos'], queryFn: () => cachedRequest(inventoryCacheKey, () => shopwiseApi.inventory.list({ pageSize: 100 })) },
   ] })
   const products = useMemo(() => {
     const balances = new Map((inventoryQuery.data?.items || []).map((item) => [item.productId, item]))
@@ -48,11 +54,25 @@ export function PosPage() {
     mutationFn: async () => {
       const fingerprint = checkoutFingerprint(method, cart.items)
       if (request.current?.fingerprint !== fingerprint) request.current = { fingerprint, id: crypto.randomUUID() }
-      return shopwiseApi.sales.checkout(checkoutPayload(request.current.id, method, cart.items))
+      const payload = checkoutPayload(request.current.id, method, cart.items)
+      if (method === 'cash') {
+        try {
+          if (!await dependenciesReady()) throw new TypeError('Offline')
+          return await shopwiseApi.sales.checkout(payload)
+        } catch (error) {
+          if (error.status && error.status !== 503 && error.code !== 'DEPENDENCY_UNAVAILABLE') throw error
+          const localReference = provisionalReference(request.current.id)
+          await offlineStore.queue({ id: request.current.id, userId, payload, localReference, status: 'pending', attempts: 0, createdAt: new Date().toISOString() })
+          await offlineStore.reduceInventory(inventoryCacheKey, payload.items)
+          dispatchEvent(new Event('shopwise:offline-sale'))
+          return { offline: true, sale: { id: request.current.id, receiptNumber: localReference, totalAmount: cart.total }, payment: { status: 'pending', method: 'cash' } }
+        }
+      }
+      return shopwiseApi.sales.checkout(payload)
     },
     onSuccess: async (data) => {
       request.current = null; cart.clear(); setMobileCart(false)
-      await Promise.all([queryClient.invalidateQueries({ queryKey: ['inventory'] }), queryClient.invalidateQueries({ queryKey: ['sales'] })])
+      await Promise.all([queryClient.invalidateQueries({ queryKey: ['inventory'] }), ...(data.offline ? [] : [queryClient.invalidateQueries({ queryKey: ['sales'] })])])
       if (method === 'card') {
         try { const intent = await shopwiseApi.payments.intent(data.sale.id); setCard({ clientSecret: intent.clientSecret, saleId: data.sale.id }) }
         catch { setResult(data); toast.error('Card setup unavailable', 'The sale remains pending. Review it before retrying.') }
@@ -65,6 +85,7 @@ export function PosPage() {
   if (error) return <div className="p-6"><ErrorState error={error} /></div>
   const filtered = products.filter((product) => `${product.name}${product.sku || ''}${product.barcode || ''}`.toLowerCase().includes(search.toLowerCase()))
   const submit = () => {
+    if (!navigator.onLine && method !== 'cash') return toast.error('Offline payment unavailable', 'Only cash sales can be queued while this device is offline.')
     if (method === 'cash' && Number(cash) < cart.total) return toast.error('Insufficient cash received', 'Cash received must cover the amount due.')
     if (method === 'card' && !import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) return toast.error('Card payments unavailable', 'Configure VITE_STRIPE_PUBLISHABLE_KEY with a Stripe test publishable key.')
     checkout.mutate()
@@ -83,4 +104,4 @@ export function PosPage() {
 
 function Cart({ cart, method, setMethod, cash, setCash, submit, loading, close }) { return <div className="flex h-full min-h-[100dvh] flex-col lg:min-h-[calc(100dvh-64px)]"><header className="flex h-16 shrink-0 items-center justify-between border-b px-4 sm:px-5"><div><h2 className="font-extrabold">Current sale</h2><small className="text-gray-500">{cart.count} items</small></div><button className="grid size-11 place-items-center rounded-lg lg:hidden" onClick={close} aria-label="Close cart"><X /></button></header><div className="min-h-0 flex-1 overflow-auto p-4 sm:p-5">{cart.items.length ? cart.items.map((item) => <article className="border-b py-4" key={item.product.id}><div className="flex justify-between gap-3"><div className="min-w-0"><strong className="block break-words text-sm">{item.product.name}</strong><small className="block text-gray-500">{money(item.product.sellingPrice)} each</small></div><strong className="shrink-0">{money(Number(item.product.sellingPrice) * item.quantity)}</strong></div><div className="mt-3 flex items-center justify-between"><div className="flex items-center rounded-lg border"><button className="grid size-11 place-items-center" aria-label={`Decrease ${item.product.name}`} onClick={() => cart.change(item.product, -1)}><Minus size={14} /></button><span className="min-w-8 text-center text-sm">{item.quantity}</span><button className="grid size-11 place-items-center" aria-label={`Increase ${item.product.name}`} onClick={() => cart.change(item.product, 1)}><Plus size={14} /></button></div><button className="grid size-11 place-items-center text-red-600" aria-label={`Remove ${item.product.name}`} onClick={() => cart.remove(item.product.id)}><Trash2 size={16} /></button></div></article>) : <EmptyState title="Cart is empty" message="Tap a product or scan a barcode to begin a sale." />}</div><footer className="safe-bottom shrink-0 border-t p-4 sm:p-5"><div className="mb-4 flex items-center justify-between gap-3"><span className="text-sm text-gray-500">Amount due</span><strong className="break-words text-right text-2xl">{money(cart.total)}</strong></div><div className="mb-4 grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-1">{['cash', 'mpesa', 'card'].map((value) => <button key={value} onClick={() => setMethod(value)} className={`rounded-md px-2 py-2 text-xs font-bold uppercase ${method === value ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-500'}`}>{value}</button>)}</div>{method === 'cash' && <div className="mb-4 grid gap-2 min-[360px]:grid-cols-2"><label><span className="label text-xs">Cash received</span><input className="control" type="number" min={cart.total} value={cash} onChange={(event) => setCash(event.target.value)} /></label><div><span className="label text-xs">Change</span><div className="control flex items-center bg-gray-50 font-semibold">{money(Math.max(0, Number(cash || 0) - cart.total))}</div></div></div>}{method !== 'cash' && <p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">{method === 'mpesa' ? 'M-Pesa remains pending until supported confirmation is available.' : 'Stripe Elements collects card details after the backend records a pending sale.'}</p>}<Button size="lg" className="w-full" disabled={!cart.items.length} loading={loading} onClick={submit}>Charge {money(cart.total)}</Button></footer></div> }
 
-function ReceiptModal({ result, close }) { const payment = result?.payment || result?.payments?.[0]; const title = payment?.status === 'pending' ? 'Payment pending' : payment?.status === 'failed' ? 'Payment failed' : 'Sale complete'; return <Modal open={Boolean(result)} onClose={close} title={title} footer={<Button onClick={close}>Done</Button>}><div className="text-center"><Badge value={payment?.status} /><h3 className="mt-4 text-2xl font-extrabold">{result?.sale?.receiptNumber}</h3><p className="mt-2 text-3xl font-extrabold text-brand-700">{money(result?.sale?.totalAmount)}</p>{payment?.status === 'pending' && <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Do not treat this payment as confirmed. Refresh the sale status before handing over goods.</p>}</div></Modal> }
+function ReceiptModal({ result, close }) { const payment = result?.payment || result?.payments?.[0]; const title = result?.offline ? 'Provisional receipt' : payment?.status === 'pending' ? 'Payment pending' : payment?.status === 'failed' ? 'Payment failed' : 'Sale complete'; return <Modal open={Boolean(result)} onClose={close} title={title} footer={<Button onClick={close}>Done</Button>}><div className="text-center"><Badge value={result?.offline ? 'pending sync' : payment?.status} /><h3 className="mt-4 text-2xl font-extrabold">{result?.sale?.receiptNumber}</h3><p className="mt-2 text-3xl font-extrabold text-brand-700">{money(result?.sale?.totalAmount)}</p>{result?.offline ? <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">This cash sale is saved on this device and is pending synchronization. The final receipt number will be assigned by the server.</p> : payment?.status === 'pending' && <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Do not treat this payment as confirmed. Refresh the sale status before handing over goods.</p>}</div></Modal> }

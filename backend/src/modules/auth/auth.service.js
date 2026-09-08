@@ -1,5 +1,16 @@
 import { AppError } from '../../errors/AppError.js'
 
+function dependencyFailure(error) {
+  const message = `${error?.message || ''} ${error?.cause?.message || ''}`.toLowerCase()
+  return !error || error.status === 0 || error.status >= 500 || /fetch|network|eai_again|timeout/.test(message)
+}
+
+function authDependencyUnavailable(error) {
+  const unavailable = new AppError(503, 'DEPENDENCY_UNAVAILABLE', 'Authentication service is temporarily unavailable')
+  unavailable.cause = error
+  return unavailable
+}
+
 function publicSession(session, user) {
   return {
     user: { id: user.id, email: user.email ?? null },
@@ -80,6 +91,7 @@ export class AuthService {
     const { data, error } = await this.publicClient.auth.refreshSession({
       refresh_token: refreshToken
     })
+    if (error && dependencyFailure(error)) throw authDependencyUnavailable(error)
     if (error || !data.user || !data.session)
       throw AppError.unauthorized('Invalid or expired refresh token')
     return publicSession(data.session, data.user)
@@ -88,6 +100,7 @@ export class AuthService {
   async verifyAccessToken(accessToken) {
     const client = this.forAccessToken(accessToken)
     const { data, error } = await client.auth.getUser()
+    if (error && dependencyFailure(error)) throw authDependencyUnavailable(error)
     if (error || !data.user) throw AppError.unauthorized('Invalid or expired access token')
     return { id: data.user.id, email: data.user.email }
   }

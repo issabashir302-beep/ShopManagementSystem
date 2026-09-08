@@ -20,8 +20,19 @@ export function AuthProvider({ children }) {
       const [session, profile] = await Promise.all([shopwiseApi.auth.session(), shopwiseApi.profile.get()])
       const next = { user: session.user, profile, role: profile.userRole }
       setIdentity(next)
+      sessionStore.write({ ...sessionStore.read(), offlineIdentity: next, offlineAuthorizedAt: Date.now() })
       return next
-    } catch (error) { if (error.status === 401) sessionStore.clear(); setIdentity(null); throw error }
+    } catch (error) {
+      if (error.status === 401) sessionStore.clear()
+      const stored = sessionStore.read()
+      const offlineAge = Date.now() - Number(stored?.offlineAuthorizedAt || 0)
+      if ((!error.status || error.status === 503 || error.code === 'DEPENDENCY_UNAVAILABLE') && stored?.offlineIdentity && offlineAge < 24 * 60 * 60 * 1000) {
+        setIdentity({ ...stored.offlineIdentity, isOffline: true })
+        return stored.offlineIdentity
+      }
+      setIdentity(null)
+      throw error
+    }
     finally { setLoading(false) }
   }, [])
 
