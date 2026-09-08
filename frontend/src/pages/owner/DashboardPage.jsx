@@ -42,7 +42,7 @@ export function DashboardPage() {
         </> : <EmptyState title="No sales yet" message="Completed checkout activity will appear here." />}
       </section>
       <section className="card min-w-0 overflow-hidden rounded-xl">
-        <header className="flex items-center justify-between border-b px-4 py-4 sm:px-5"><h2 className="font-bold">Low stock</h2><Link to="/app/inventory" className="text-xs font-bold text-brand-700">View inventory</Link></header>
+        <header className="flex items-center justify-between border-b px-4 py-4 sm:px-5"><h2 className="font-bold">Low stock</h2><Link to="/app/products" className="text-xs font-bold text-brand-700">View stock</Link></header>
         <div className="divide-y px-4 sm:px-5">{low.data.items.length ? low.data.items.map((item) => <div className="flex min-w-0 items-center justify-between gap-4 py-4" key={item.productId}><div className="min-w-0"><strong className="block truncate text-sm">{item.name}</strong><small className="block truncate text-gray-500">{item.sku || item.unit}</small></div><span className="shrink-0 font-bold text-amber-700">{item.quantity}</span></div>) : <p className="py-8 text-center text-sm text-gray-500">No low-stock items.</p>}</div>
       </section>
     </div>

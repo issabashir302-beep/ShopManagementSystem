@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { Boxes, ChartNoAxesCombined, CreditCard, Grid2X2, LogOut, Menu, PackageSearch, ReceiptText, Settings, UserRound, UsersRound, X } from 'lucide-react'
+import { ChartNoAxesCombined, CreditCard, Grid2X2, LogOut, Menu, PackageSearch, ReceiptText, Settings, UserRound, UsersRound, X } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
-const links = [['/app', 'Overview', Grid2X2, true], ['/app/products', 'Products', PackageSearch], ['/app/inventory', 'Inventory', Boxes], ['/app/sales', 'Sales', ReceiptText], ['/app/shopkeepers', 'Shopkeepers', UsersRound], ['/app/payments', 'Payments', CreditCard], ['/app/reports', 'Reports', ChartNoAxesCombined], ['/app/settings', 'Settings', Settings], ['/app/profile', 'Profile', UserRound]]
+const links = [['/app', 'Overview', Grid2X2, true], ['/app/products', 'Products & Stock', PackageSearch], ['/app/sales', 'Sales', ReceiptText], ['/app/shopkeepers', 'Shopkeepers', UsersRound], ['/app/payments', 'Payments', CreditCard], ['/app/reports', 'Reports', ChartNoAxesCombined], ['/app/settings', 'Settings', Settings], ['/app/profile', 'Profile', UserRound]]
 
 export function OwnerShell() {
   const [open, setOpen] = useState(false); const auth = useAuth()
