@@ -1,10 +1,12 @@
 import { api } from './apiClient'
+import { setShopCurrency } from '../utils/format'
 const clean = (value) => value || undefined
+const syncShop = (request) => request.then((shop) => { setShopCurrency(shop.currency); return shop })
 
 export const shopwiseApi = {
   auth: { signup: (body) => api('/auth/signup', { method: 'POST', body, auth: false }), login: (body) => api('/auth/login', { method: 'POST', body, auth: false }), session: () => api('/auth/session'), logout: () => api('/auth/logout', { method: 'POST' }) },
   profile: { get: () => api('/users/me'), update: (body) => api('/users/me', { method: 'PATCH', body }) },
-  shop: { get: () => api('/shops/me'), create: (body) => api('/shops', { method: 'POST', body }), update: (body) => api('/shops/me', { method: 'PATCH', body }) },
+  shop: { get: () => syncShop(api('/shops/me')), create: (body) => syncShop(api('/shops', { method: 'POST', body })), update: (body) => syncShop(api('/shops/me', { method: 'PATCH', body })) },
   products: {
     list: ({ search, category, status = 'active', page = 1, pageSize = 50 } = {}) => api('/products', { query: { search: clean(search), category: clean(category), status, page, pageSize } }),
     get: (id) => api(`/products/${id}`), create: (body) => api('/products', { method: 'POST', body }), update: (id, body) => api(`/products/${id}`, { method: 'PATCH', body }), archive: (id) => api(`/products/${id}`, { method: 'DELETE' }),
