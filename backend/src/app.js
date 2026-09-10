@@ -21,6 +21,7 @@ import {
 import { createReportRouter } from './modules/reports/report.routes.js'
 import { createReturnRouter } from './modules/returns/return.routes.js'
 import { createExpenseRouter } from './modules/expenses/expense.routes.js'
+import { createMpesaRouter, createMpesaWebhookRouter } from './modules/mpesa/mpesa.routes.js'
 import { createRateLimiters, onlyMethods } from './middleware/rateLimit.middleware.js'
 
 export function createApp({
@@ -38,6 +39,7 @@ export function createApp({
   notificationService,
   returnService,
   expenseService,
+  mpesaService,
   readinessCheck
 }) {
   const app = express()
@@ -61,6 +63,7 @@ export function createApp({
   )
   app.use(createStripeWebhookRouter(paymentService))
   app.use(express.json({ limit: '100kb' }))
+  if (mpesaService) app.use(createMpesaWebhookRouter(mpesaService))
 
   app.use(['/api/v1/auth/signup', '/api/v1/auth/login'], rateLimits.auth)
   app.use('/api/v1/shopkeepers', onlyMethods(['POST'], rateLimits.sensitiveWrite))
@@ -88,6 +91,7 @@ export function createApp({
   app.use('/api/v1', createReportRouter({ authService, reportService, notificationService }))
   app.use('/api/v1', createReturnRouter({ authService, returnService }))
   app.use('/api/v1/expenses', createExpenseRouter({ authService, expenseService }))
+  if (mpesaService) app.use('/api/v1', createMpesaRouter({ authService, mpesaService }))
 
   app.use(notFoundMiddleware)
   app.use(errorMiddleware({ logger, nodeEnv: config.nodeEnv }))

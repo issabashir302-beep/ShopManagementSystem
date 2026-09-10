@@ -1,5 +1,5 @@
 import { useQueries } from '@tanstack/react-query'
-import { AlertTriangle, Banknote, Boxes, ReceiptText } from 'lucide-react'
+import { AlertTriangle, Banknote, Boxes, ReceiptText, Smartphone } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { shopwiseApi } from '../../services/shopwiseApi'
 import { money, dateTime } from '../../utils/format'
@@ -8,13 +8,14 @@ import { PageLoading, ErrorState, EmptyState } from '../../components/feedback/S
 import { Badge } from '../../components/ui/Badge'
 
 export function DashboardPage() {
-  const [daily, low, sales] = useQueries({ queries: [
+  const [daily, low, sales, paymentMethods] = useQueries({ queries: [
     { queryKey: ['reports', 'daily'], queryFn: () => shopwiseApi.reports.daily() },
     { queryKey: ['inventory', 'low', 1], queryFn: () => shopwiseApi.inventory.low({ pageSize: 5 }) },
     { queryKey: ['sales', { limit: 5 }], queryFn: () => shopwiseApi.sales.list({ limit: 5 }) },
+    { queryKey: ['payment-methods'], queryFn: shopwiseApi.mpesa.availability },
   ] })
-  if ([daily, low, sales].some((query) => query.isLoading)) return <PageLoading />
-  const error = [daily, low, sales].find((query) => query.error)?.error
+  if ([daily, low, sales, paymentMethods].some((query) => query.isLoading)) return <PageLoading />
+  const error = [daily, low, sales, paymentMethods].find((query) => query.error)?.error
   if (error) return <ErrorState error={error} />
 
   const totals = daily.data.totals || {}
@@ -26,6 +27,7 @@ export function DashboardPage() {
 
   return <>
     <PageHeader eyebrow="Overview" title="Your shop today" description="Authoritative activity from persisted sales and inventory." />
+    {paymentMethods.data.preference === 'not_selected' && <section className="mb-4 flex flex-col justify-between gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:flex-row sm:items-center sm:p-5"><div className="flex gap-3"><Smartphone className="mt-0.5 shrink-0 text-brand-700" size={21}/><div><strong>Complete your payment setup</strong><p className="mt-1 text-sm text-emerald-900/75">Connect your Till or Paybill for manual M-Pesa or integrated STK Push.</p></div></div><Link to="/app/settings/payments" className="shrink-0 rounded-lg bg-brand-600 px-4 py-2.5 text-center text-sm font-bold text-white">Continue setup</Link></section>}
     <div className="grid gap-3 min-[460px]:grid-cols-2 xl:grid-cols-5">
       <article className="card min-w-0 rounded-xl p-4 min-[460px]:col-span-2 sm:p-5">
         <div className="flex items-center justify-between gap-3"><span className="text-sm text-gray-500">Today’s cash flow</span><Banknote size={18} className="shrink-0 text-brand-600" /></div>

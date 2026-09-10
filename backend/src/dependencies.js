@@ -26,6 +26,10 @@ import { ReturnRepository } from './modules/returns/return.repository.js'
 import { ReturnService } from './modules/returns/return.service.js'
 import { ExpenseRepository } from './modules/expenses/expense.repository.js'
 import { ExpenseService } from './modules/expenses/expense.service.js'
+import { MpesaRepository } from './modules/mpesa/mpesa.repository.js'
+import { MpesaService } from './modules/mpesa/mpesa.service.js'
+import { DarajaGateway } from './modules/mpesa/daraja.gateway.js'
+import { createCredentialCipher } from './modules/mpesa/credentialCipher.js'
 
 export function buildDependencies(config) {
   const logger = createLogger({ level: config.logLevel })
@@ -47,6 +51,7 @@ export function buildDependencies(config) {
   const notificationRepository = new NotificationRepository(clients.adminClient)
   const returnRepository = new ReturnRepository(clients.forAccessToken)
   const expenseRepository = new ExpenseRepository(clients.forAccessToken)
+  const mpesaRepository = new MpesaRepository({ adminClient: clients.adminClient, forAccessToken: clients.forAccessToken })
   const stripeGateway = new StripeGateway({
     secretKey: config.stripeSecretKey,
     webhookSecret: config.stripeWebhookSecret
@@ -82,6 +87,7 @@ export function buildDependencies(config) {
   const monthlyReportJob = createMonthlyReportJob(notificationService, logger)
   const returnService = new ReturnService({ returnRepository, shopService, logger })
   const expenseService = new ExpenseService({ expenseRepository, shopService, logger })
+  const mpesaService = new MpesaService({ repository: mpesaRepository, shopService, gateway: new DarajaGateway(), cipher: createCredentialCipher(config.mpesaCredentialsEncryptionKey), publicApiUrl: config.publicApiUrl, logger })
 
   const readinessCheck = async () => {
     const { error } = await clients.adminClient.from('users').select('id').limit(1)
@@ -102,6 +108,7 @@ export function buildDependencies(config) {
     notificationService,
     returnService,
     expenseService,
+    mpesaService,
     monthlyReportJob,
     readinessCheck
   }

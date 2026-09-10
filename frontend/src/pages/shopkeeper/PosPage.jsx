@@ -44,6 +44,8 @@ export function PosPage() {
   const [scanning, setScanning] = useState(false);
   const [method, setMethod] = useState("cash");
   const [cash, setCash] = useState("");
+  const [mpesaPhone, setMpesaPhone] = useState("");
+  const [mpesaReceipt, setMpesaReceipt] = useState("");
   const [result, setResult] = useState(null);
   const [card, setCard] = useState(null);
   const [mobileCart, setMobileCart] = useState(false);
@@ -53,7 +55,7 @@ export function PosPage() {
   const auth = useAuth();
   const userId = auth.user?.id;
   const inventoryCacheKey = `inventory:${userId}`;
-  const [productsQuery] = useQueries({
+  const [productsQuery, paymentMethodsQuery] = useQueries({
     queries: [
       {
         queryKey: ["products", "pos-catalog"],
@@ -61,6 +63,7 @@ export function PosPage() {
           cachedRequest(`catalog:${userId}`, shopwiseApi.products.catalog),
         staleTime: 120_000,
       },
+      { queryKey: ["payment-methods"], queryFn: shopwiseApi.mpesa.availability, staleTime: 120_000 },
     ],
   });
   const products = useMemo(
@@ -118,7 +121,8 @@ export function PosPage() {
       const fingerprint = checkoutFingerprint(method, cart.items);
       if (request.current?.fingerprint !== fingerprint)
         request.current = { fingerprint, id: crypto.randomUUID() };
-      const payload = checkoutPayload(request.current.id, method, cart.items);
+      const providerMethod = method.startsWith("mpesa_") ? "mpesa" : method;
+      const payload = checkoutPayload(request.current.id, providerMethod, cart.items);
       if (method === "cash") {
         try {
           return await shopwiseApi.sales.checkout(payload);
@@ -161,7 +165,35 @@ export function PosPage() {
       setMobileCart(false);
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       if (!data.offline) queryClient.invalidateQueries({ queryKey: ["sales"] });
-      if (method === "card") {
+      if (method === "mpesa_manual") {
+        try {
+          await shopwiseApi.mpesa.confirmManual({ paymentId: data.payment.id, receiptNumber: mpesaReceipt });
+          const detail = await shopwiseApi.sales.get(data.sale.id);
+          setResult({ sale: detail.sale, items: detail.items, payment: detail.payments?.[0] });
+          setMpesaReceipt("");
+          playSaleComplete();
+        } catch (error) {
+          setResult(data);
+          toast.error("Manual confirmation failed", error.message);
+        }
+      } else if (method === "mpesa_stk") {
+        try {
+          const attempt = await shopwiseApi.mpesa.initiate({ saleId: data.sale.id, phoneNumber: mpesaPhone, idempotencyKey: crypto.randomUUID() });
+          toast.success("STK Push sent", "Ask the customer to complete payment on their phone.");
+          let settled = attempt;
+          for (let index = 0; index < 30 && ["pending", "processing"].includes(settled.status); index += 1) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            settled = await shopwiseApi.mpesa.attempt(attempt.id);
+          }
+          const detail = await shopwiseApi.sales.get(data.sale.id);
+          setResult({ sale: detail.sale, items: detail.items, payment: detail.payments?.[0] });
+          if (settled.status === "completed") { setMpesaPhone(""); playSaleComplete(); }
+          else toast.error("M-Pesa not completed", settled.failureMessage || "The request timed out. You can retry from the sale record.");
+        } catch (error) {
+          setResult(data);
+          toast.error("Unable to complete M-Pesa", error.message);
+        }
+      } else if (method === "card") {
         try {
           const intent = await shopwiseApi.payments.intent(data.sale.id);
           setCard({ clientSecret: intent.clientSecret, saleId: data.sale.id });
@@ -194,8 +226,8 @@ export function PosPage() {
       );
     },
   });
-  if (productsQuery.isLoading) return <PageLoading />;
-  const error = productsQuery.error;
+  if (productsQuery.isLoading || paymentMethodsQuery.isLoading) return <PageLoading />;
+  const error = productsQuery.error || paymentMethodsQuery.error;
   if (error)
     return (
       <div className="p-6">
@@ -218,6 +250,8 @@ export function PosPage() {
         "Insufficient cash received",
         "Cash received must cover the amount due.",
       );
+    if (method === "mpesa_stk" && !mpesaPhone.trim()) return toast.error("Phone number required", "Enter the customer’s Safaricom number.");
+    if (method === "mpesa_manual" && !mpesaReceipt.trim()) return toast.error("Receipt number required", "Enter the M-Pesa confirmation code.");
     if (method === "card" && !import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
       return toast.error(
         "Card payments unavailable",
@@ -307,6 +341,11 @@ export function PosPage() {
           setMethod={setMethod}
           cash={cash}
           setCash={setCash}
+          mpesaPhone={mpesaPhone}
+          setMpesaPhone={setMpesaPhone}
+          mpesaReceipt={mpesaReceipt}
+          setMpesaReceipt={setMpesaReceipt}
+          paymentMethods={paymentMethodsQuery.data}
           submit={submit}
           loading={checkout.isPending}
           close={() => setMobileCart(false)}
@@ -357,6 +396,11 @@ function Cart({
   setMethod,
   cash,
   setCash,
+  mpesaPhone,
+  setMpesaPhone,
+  mpesaReceipt,
+  setMpesaReceipt,
+  paymentMethods,
   submit,
   loading,
   close,
@@ -437,14 +481,14 @@ function Cart({
             {money(cart.total)}
           </strong>
         </div>
-        <div className="mb-4 grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-1">
-          {["cash", "mpesa", "card"].map((value) => (
+        <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1 sm:grid-cols-4">
+          {[['cash','Cash'], ...(paymentMethods?.methods?.manualMpesa ? [['mpesa_manual','M-Pesa manual']] : []), ...(paymentMethods?.methods?.stkMpesa ? [['mpesa_stk','M-Pesa STK']] : []), ['card','Card']].map(([value,label]) => (
             <button
               key={value}
               onClick={() => setMethod(value)}
               className={`rounded-md px-2 py-2 text-xs font-bold uppercase ${method === value ? "bg-white text-brand-700 shadow-sm" : "text-gray-500"}`}
             >
-              {value}
+              {label}
             </button>
           ))}
         </div>
@@ -468,11 +512,11 @@ function Cart({
             </div>
           </div>
         )}
-        {method !== "cash" && (
+        {method === "mpesa_stk" && <label className="mb-4 block"><span className="label text-xs">Customer M-Pesa number</span><input className="control" type="tel" inputMode="tel" placeholder="07… or 254…" value={mpesaPhone} onChange={(event)=>setMpesaPhone(event.target.value)}/></label>}
+        {method === "mpesa_manual" && <div className="mb-4"><div className="mb-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-900">Pay to {paymentMethods.shortcodeType === 'paybill' ? 'Paybill' : 'Till'} <strong>{paymentMethods.shortcode}</strong>. This payment is confirmed by the cashier, not automatically by Safaricom.</div><label><span className="label text-xs">M-Pesa receipt number</span><input className="control uppercase" maxLength="30" value={mpesaReceipt} onChange={(event)=>setMpesaReceipt(event.target.value)}/></label></div>}
+        {method === "card" && (
           <p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
-            {method === "mpesa"
-              ? "M-Pesa remains pending until supported confirmation is available."
-              : "Stripe Elements collects card details after the backend records a pending sale."}
+            Stripe Elements collects card details after the backend records a pending sale.
           </p>
         )}
         <Button

@@ -51,6 +51,8 @@ There is currently no `test:integration` script. Tests use injected fakes and do
 | `SUPABASE_SERVICE_ROLE_KEY` | Backend-only Auth administration/readiness key             |
 | `STRIPE_SECRET_KEY`         | Backend-only Stripe API key; use test mode locally         |
 | `STRIPE_WEBHOOK_SECRET`     | Stripe endpoint signing secret                             |
+| `MPESA_CREDENTIALS_ENCRYPTION_KEY` | 32-byte hex/base64 key used to encrypt Daraja secrets |
+| `PUBLIC_API_URL`            | Public backend URL used for the Daraja callback             |
 | `RESEND_API_KEY`            | Backend-only Resend API key                                |
 | `RESEND_FROM_EMAIL`         | Verified monthly-report sender                             |
 | `APP_TIMEZONE`              | IANA business timezone used for report boundaries and cron |

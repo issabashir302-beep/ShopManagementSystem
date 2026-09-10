@@ -76,6 +76,8 @@ export function parseEnv(source = process.env) {
     supabaseServiceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY', source),
     stripeSecretKey: required('STRIPE_SECRET_KEY', source),
     stripeWebhookSecret: required('STRIPE_WEBHOOK_SECRET', source),
+    mpesaCredentialsEncryptionKey: source.MPESA_CREDENTIALS_ENCRYPTION_KEY?.trim() || '',
+    publicApiUrl: source.PUBLIC_API_URL?.trim()?.replace(/\/$/, '') || `http://localhost:${port}`,
     resendApiKey: required('RESEND_API_KEY', source),
     resendFromEmail: required('RESEND_FROM_EMAIL', source),
     appTimezone,
