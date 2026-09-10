@@ -5,9 +5,9 @@ export function getTheme() {
     const stored = localStorage.getItem(THEME_KEY)
     if (stored === 'dark' || stored === 'light') return stored
   } catch {
-    // Fall back to the device preference when storage is unavailable.
+    // Fall back to the default light theme when storage is unavailable.
   }
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'light'
 }
 
 export function applyTheme(theme = getTheme()) {
