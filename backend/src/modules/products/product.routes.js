@@ -42,6 +42,7 @@ export function createProductRouter({ authService, productService }) {
   router.use(requireAuth(authService))
   router.post('/', body(validateProductCreate), asyncHandler(controller.create))
   router.get('/', query, asyncHandler(controller.list))
+  router.get('/pos/catalog', asyncHandler(controller.catalog))
   router.get('/:productId', id, asyncHandler(controller.get))
   router.patch('/:productId', id, body(validateProductUpdate), asyncHandler(controller.update))
   router.post('/:productId/restore', id, asyncHandler(controller.restore))

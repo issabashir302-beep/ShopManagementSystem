@@ -58,6 +58,7 @@ export function createPaymentRouter({ authService, paymentService }) {
     query,
     asyncHandler(controller.listForSale)
   )
+  router.get('/payments', authenticated, query, asyncHandler(controller.list))
   router.get('/payments/:paymentId', authenticated, paymentId, asyncHandler(controller.get))
   return router
 }

@@ -18,6 +18,17 @@ export class PaymentRepository {
   constructor({ forAccessToken, adminClient }) {
     Object.assign(this, { forAccessToken, adminClient })
   }
+  async list(shopId, filters, token) {
+    const from = (filters.page - 1) * filters.limit
+    let query = this.forAccessToken(token).from('payments').select(`${FIELDS}, sales!inner(receipt_number, shop_id)`, { count: 'exact' }).eq('sales.shop_id', shopId)
+    if (filters.status) query = query.eq('status', filters.status)
+    if (filters.method) query = query.eq('method', filters.method)
+    if (filters.dateFrom) query = query.gte('created_at', `${filters.dateFrom}T00:00:00.000Z`)
+    if (filters.dateTo) query = query.lte('created_at', `${filters.dateTo}T23:59:59.999Z`)
+    const result = await query.order('created_at', { ascending: false }).range(from, from + filters.limit - 1)
+    if (result.error) throw paymentError(result.error)
+    return { rows: result.data ?? [], count: result.count ?? 0 }
+  }
   async listForSale(shopId, saleId, filters, token) {
     const client = this.forAccessToken(token)
     const sale = await client

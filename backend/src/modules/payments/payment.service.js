@@ -5,6 +5,11 @@ export class PaymentService {
   constructor({ paymentRepository, shopService, stripeGateway, logger }) {
     Object.assign(this, { paymentRepository, shopService, stripeGateway, logger })
   }
+  async list(auth, filters) {
+    const context = await this.shopService.getCurrentShopContext(auth)
+    const result = await this.paymentRepository.list(context.shop.id, filters, auth.token)
+    return { items: result.rows.map((row) => ({ ...publicPayment(row), receiptNumber: row.sales?.receipt_number })), pagination: { page: filters.page, pageSize: filters.limit, total: result.count, totalPages: Math.ceil(result.count / filters.limit) } }
+  }
   async listForSale(auth, saleId, filters) {
     const context = await this.shopService.getCurrentShopContext(auth)
     const result = await this.paymentRepository.listForSale(

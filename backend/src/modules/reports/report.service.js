@@ -10,6 +10,8 @@ export function monthPeriod(month, timezone, now = DateTime.now()) {
   return {
     key: start.toFormat('yyyy-MM'),
     label: start.toFormat('LLLL yyyy'),
+    startDate: start.toISODate(),
+    endDate: start.plus({ months: 1 }).toISODate(),
     start: start.toUTC().toISO(),
     end: start.plus({ months: 1 }).toUTC().toISO()
   }
@@ -22,6 +24,8 @@ export function dayPeriod(date, timezone, now = DateTime.now()) {
   return {
     key: start.toISODate(),
     label: start.toFormat('dd LLLL yyyy'),
+    startDate: start.toISODate(),
+    endDate: start.plus({ days: 1 }).toISODate(),
     start: start.toUTC().toISO(),
     end: start.plus({ days: 1 }).toUTC().toISO()
   }
@@ -56,6 +60,8 @@ export class ReportService {
       shop.id,
       period.start,
       period.end,
+      period.startDate,
+      period.endDate,
       auth.token
     )
     const summary = {

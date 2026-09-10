@@ -19,15 +19,21 @@ export function DashboardPage() {
 
   const totals = daily.data.totals || {}
   const cards = [
-    ['Today’s sales', money(totals.totalSales ?? totals.grossRevenue), Banknote],
     ['Transactions', totals.transactions ?? totals.salesCount ?? 0, ReceiptText],
-    ['Gross profit', money(totals.grossProfit), Boxes],
+    ['Net operating profit', money(totals.netOperatingProfit ?? totals.grossProfit), Boxes],
     ['Low stock', low.data.pagination.total, AlertTriangle],
   ]
 
   return <>
     <PageHeader eyebrow="Overview" title="Your shop today" description="Authoritative activity from persisted sales and inventory." />
-    <div className="grid gap-3 min-[460px]:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 min-[460px]:grid-cols-2 xl:grid-cols-5">
+      <article className="card min-w-0 rounded-xl p-4 min-[460px]:col-span-2 sm:p-5">
+        <div className="flex items-center justify-between gap-3"><span className="text-sm text-gray-500">Today’s cash flow</span><Banknote size={18} className="shrink-0 text-brand-600" /></div>
+        <div className="mt-4 grid grid-cols-2 divide-x sm:mt-5">
+          <div className="min-w-0 pr-3"><span className="block text-xs font-semibold text-emerald-700">Amount in</span><strong className="mt-1 block break-words text-xl sm:text-2xl">{money(totals.totalSales ?? totals.grossRevenue)}</strong><small className="mt-1 block text-gray-500">Completed sales</small></div>
+          <div className="min-w-0 pl-3"><span className="block text-xs font-semibold text-red-700">Amount out</span><strong className="mt-1 block break-words text-xl sm:text-2xl">{money(totals.operatingExpenses)}</strong><small className="mt-1 block text-gray-500">Operating expenses</small></div>
+        </div>
+      </article>
       {cards.map(([label, value, Icon]) => <article className="card min-w-0 rounded-xl p-4 sm:p-5" key={label}>
         <div className="flex justify-between gap-3"><span className="text-sm text-gray-500">{label}</span><Icon size={18} className="shrink-0 text-brand-600" /></div>
         <strong className="mt-4 block break-words text-2xl sm:mt-5">{value}</strong>

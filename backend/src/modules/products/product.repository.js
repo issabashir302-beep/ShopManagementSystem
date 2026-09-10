@@ -22,6 +22,11 @@ export class ProductRepository {
   constructor(forAccessToken) {
     this.forAccessToken = forAccessToken
   }
+  async catalog(shopId, token) {
+    const { data, error } = await this.forAccessToken(token).from('products').select('id, name, sku, barcode, category, unit, selling_price, low_stock_threshold, inventory(quantity)').eq('shop_id', shopId).eq('is_active', true).is('deleted_at', null).order('name')
+    if (error) throw productError(error)
+    return data ?? []
+  }
 
   async create(shopId, input, token) {
     const { data, error } = await this.forAccessToken(token)

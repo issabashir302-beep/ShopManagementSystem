@@ -1,0 +1,1 @@
+import{afterEach,expect,test}from'vitest';import{posSoundsEnabled,setPosSoundsEnabled}from'./feedback';afterEach(()=>localStorage.clear());test('POS sounds can be disabled',()=>{setPosSoundsEnabled(false);expect(posSoundsEnabled()).toBe(false)})

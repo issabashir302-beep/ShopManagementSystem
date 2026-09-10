@@ -8,6 +8,7 @@ export const shopwiseApi = {
   profile: { get: () => api('/users/me'), update: (body) => api('/users/me', { method: 'PATCH', body }) },
   shop: { get: () => syncShop(api('/shops/me')), create: (body) => syncShop(api('/shops', { method: 'POST', body })), update: (body) => syncShop(api('/shops/me', { method: 'PATCH', body })) },
   products: {
+    catalog: () => api('/products/pos/catalog'),
     list: ({ search, category, status = 'active', page = 1, pageSize = 50 } = {}) => api('/products', { query: { search: clean(search), category: clean(category), status, page, pageSize } }),
     get: (id) => api(`/products/${id}`), create: (body) => api('/products', { method: 'POST', body }), update: (id, body) => api(`/products/${id}`, { method: 'PATCH', body }), archive: (id) => api(`/products/${id}`, { method: 'DELETE' }), restore: (id) => api(`/products/${id}/restore`, { method: 'POST' }),
   },
@@ -19,10 +20,15 @@ export const shopwiseApi = {
     list: () => api('/shopkeepers'), get: (id) => api(`/shopkeepers/${id}`), create: (body) => api('/shopkeepers', { method: 'POST', body }), update: (id, body) => api(`/shopkeepers/${id}`, { method: 'PATCH', body }), status: (id, isActive) => api(`/shopkeepers/${id}/status`, { method: 'PATCH', body: { isActive } }), reset: (id) => api(`/shopkeepers/${id}/reset-password`, { method: 'POST' }),
   },
   sales: {
-    list: ({ page = 1, limit = 50, dateFrom, dateTo, soldBy, status } = {}) => api('/sales', { query: { page, limit, dateFrom: clean(dateFrom), dateTo: clean(dateTo), soldBy: clean(soldBy), status: clean(status) } }),
+    list: ({ page = 1, limit = 10, dateFrom, dateTo, soldBy, status } = {}) => api('/sales', { query: { page, limit, dateFrom: clean(dateFrom), dateTo: clean(dateTo), soldBy: clean(soldBy), status: clean(status) } }),
     get: (id) => api(`/sales/${id}`), checkout: (body) => api('/checkout', { method: 'POST', body, timeoutMs: 15000 }), void: (id, reason) => api(`/sales/${id}/void`, { method: 'POST', body: { reason } }), returnItems: (id, items, reason) => api(`/sales/${id}/returns`, { method: 'POST', body: { items, reason } }),
   },
-  payments: { forSale: (id) => api(`/sales/${id}/payments`), get: (id) => api(`/payments/${id}`), intent: (saleId) => api('/payments/stripe/create-intent', { method: 'POST', body: { saleId } }) },
+  payments: { list: ({ page = 1, pageSize = 10, status, method, dateFrom, dateTo } = {}) => api('/payments', { query: { page, pageSize, status: clean(status), method: clean(method), dateFrom: clean(dateFrom), dateTo: clean(dateTo) } }), forSale: (id) => api(`/sales/${id}/payments`), get: (id) => api(`/payments/${id}`), intent: (saleId) => api('/payments/stripe/create-intent', { method: 'POST', body: { saleId } }) },
+  expenses: {
+    list: ({ page = 1, pageSize = 10, dateFrom, dateTo, category, paymentMethod } = {}) => api('/expenses', { query: { page, pageSize, dateFrom: clean(dateFrom), dateTo: clean(dateTo), category: clean(category), paymentMethod: clean(paymentMethod) } }),
+    summary: ({ dateFrom, dateTo } = {}) => api('/expenses/summary', { query: { dateFrom: clean(dateFrom), dateTo: clean(dateTo) } }),
+    create: (body) => api('/expenses', { method: 'POST', body }), update: (id, body) => api(`/expenses/${id}`, { method: 'PATCH', body }), archive: (id) => api(`/expenses/${id}`, { method: 'DELETE' }),
+  },
   reports: {
     daily: (date) => api('/reports/daily-sales', { query: { date: clean(date) } }), monthly: (month) => api('/reports/monthly-sales', { query: { month: clean(month) } }), products: (month) => api('/reports/products', { query: { month: clean(month) } }), inventory: (month) => api('/reports/inventory', { query: { month: clean(month) } }), profit: (month) => api('/reports/profit', { query: { month: clean(month) } }), summary: (month) => api('/reports/monthly-summary', { query: { month: clean(month) } }), email: (month) => api('/reports/monthly-summary/email', { method: 'POST', body: month ? { month } : {} }),
   },

@@ -13,8 +13,8 @@ export function PosShell() {
   const userId = auth.user?.id
   useQuery({ queryKey: ['shop'], queryFn: () => cachedRequest(`shop:${userId}`, shopwiseApi.shop.get) })
 
-  return <div className="min-h-screen min-h-[100dvh] bg-[#f5f7f5]">
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-white/95 px-2 backdrop-blur sm:px-6">
+  return <div className="min-h-screen min-h-[100dvh] bg-[#f5f7f5] pt-16">
+    <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b bg-white/95 px-2 backdrop-blur sm:px-6">
       <NavLink to="/pos" className="flex min-h-11 shrink-0 items-center gap-2 px-1 font-extrabold" aria-label="Shopwise POS home">
         <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-white">S</span>
         <span className="hidden md:inline">Shopwise</span>

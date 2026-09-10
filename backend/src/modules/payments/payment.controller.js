@@ -1,6 +1,7 @@
 import { sendSuccess } from '../../utils/apiResponse.js'
 export function createPaymentController(service) {
   return {
+    list: async (req, res) => sendSuccess(res, await service.list(req.auth, req.validatedQuery)),
     listForSale: async (req, res) =>
       sendSuccess(
         res,

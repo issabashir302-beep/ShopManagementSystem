@@ -24,6 +24,8 @@ import { createResendClient } from './config/resend.js'
 import { createMonthlyReportJob } from './jobs/monthlyReport.job.js'
 import { ReturnRepository } from './modules/returns/return.repository.js'
 import { ReturnService } from './modules/returns/return.service.js'
+import { ExpenseRepository } from './modules/expenses/expense.repository.js'
+import { ExpenseService } from './modules/expenses/expense.service.js'
 
 export function buildDependencies(config) {
   const logger = createLogger({ level: config.logLevel })
@@ -44,6 +46,7 @@ export function buildDependencies(config) {
   const reportRepository = new ReportRepository(clients.forAccessToken)
   const notificationRepository = new NotificationRepository(clients.adminClient)
   const returnRepository = new ReturnRepository(clients.forAccessToken)
+  const expenseRepository = new ExpenseRepository(clients.forAccessToken)
   const stripeGateway = new StripeGateway({
     secretKey: config.stripeSecretKey,
     webhookSecret: config.stripeWebhookSecret
@@ -78,6 +81,7 @@ export function buildDependencies(config) {
   })
   const monthlyReportJob = createMonthlyReportJob(notificationService, logger)
   const returnService = new ReturnService({ returnRepository, shopService, logger })
+  const expenseService = new ExpenseService({ expenseRepository, shopService, logger })
 
   const readinessCheck = async () => {
     const { error } = await clients.adminClient.from('users').select('id').limit(1)
@@ -97,6 +101,7 @@ export function buildDependencies(config) {
     reportService,
     notificationService,
     returnService,
+    expenseService,
     monthlyReportJob,
     readinessCheck
   }

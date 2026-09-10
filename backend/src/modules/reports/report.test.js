@@ -62,11 +62,15 @@ describe('ReportService', () => {
     const p = monthPeriod('2026-08', 'Asia/Kuala_Lumpur')
     assert.equal(p.start, '2026-07-31T16:00:00.000Z')
     assert.equal(p.end, '2026-08-31T16:00:00.000Z')
+    assert.equal(p.startDate, '2026-08-01')
+    assert.equal(p.endDate, '2026-09-01')
   })
   it('uses correct DST-aware daily boundaries', () => {
     const p = dayPeriod('2026-03-08', 'America/New_York')
     assert.equal(p.start, '2026-03-08T05:00:00.000Z')
     assert.equal(p.end, '2026-03-09T04:00:00.000Z')
+    assert.equal(p.startDate, '2026-03-08')
+    assert.equal(p.endDate, '2026-03-09')
   })
 })
 describe('financial SQL contract', () => {

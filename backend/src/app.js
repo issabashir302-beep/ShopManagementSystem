@@ -20,6 +20,7 @@ import {
 } from './modules/payments/payment.routes.js'
 import { createReportRouter } from './modules/reports/report.routes.js'
 import { createReturnRouter } from './modules/returns/return.routes.js'
+import { createExpenseRouter } from './modules/expenses/expense.routes.js'
 import { createRateLimiters, onlyMethods } from './middleware/rateLimit.middleware.js'
 
 export function createApp({
@@ -36,6 +37,7 @@ export function createApp({
   reportService,
   notificationService,
   returnService,
+  expenseService,
   readinessCheck
 }) {
   const app = express()
@@ -85,6 +87,7 @@ export function createApp({
   app.use('/api/v1', createPaymentRouter({ authService, paymentService }))
   app.use('/api/v1', createReportRouter({ authService, reportService, notificationService }))
   app.use('/api/v1', createReturnRouter({ authService, returnService }))
+  app.use('/api/v1/expenses', createExpenseRouter({ authService, expenseService }))
 
   app.use(notFoundMiddleware)
   app.use(errorMiddleware({ logger, nodeEnv: config.nodeEnv }))

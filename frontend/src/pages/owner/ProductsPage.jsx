@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Archive, Boxes, Edit3, History, PackagePlus, Plus, Printer, RotateCcw, Search, SlidersHorizontal } from 'lucide-react'
 import { PageHeader } from '../../components/layout/PageHeader'
@@ -19,6 +19,8 @@ export function ProductsPage() {
   const [adjusting, setAdjusting] = useState(null)
   const [history, setHistory] = useState(null)
   const [label, setLabel] = useState(null)
+  const [page, setPage] = useState(1)
+  useEffect(() => setPage(1), [filters])
   const queryClient = useQueryClient()
   const toast = useToast()
   const [productsQuery, inventoryQuery] = useQueries({ queries: [
@@ -73,6 +75,9 @@ export function ProductsPage() {
     const matchesStock = filters.stock === 'all' || state === filters.stock
     return matchesSearch && matchesCategory && matchesStock
   }), [allItems, filters])
+  const totalPages = Math.max(1, Math.ceil(items.length / 10))
+  const currentPage = Math.min(page, totalPages)
+  const pagedItems = items.slice((currentPage - 1) * 10, currentPage * 10)
 
   if (productsQuery.isLoading || inventoryQuery.isLoading) return <PageLoading />
   const error = productsQuery.error || inventoryQuery.error
@@ -93,7 +98,7 @@ export function ProductsPage() {
       <select aria-label="Stock level" className="control lg:w-auto" value={filters.stock} onChange={(event) => setFilters({ ...filters, stock: event.target.value })}><option value="all">All stock levels</option><option value="in stock">In stock</option><option value="low stock">Low stock</option><option value="out of stock">Out of stock</option></select>
       <select aria-label="Product status" className="control lg:w-auto" value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}><option value="active">Active products</option><option value="archived">Archived products</option><option value="all">All products</option></select>
     </section>
-    {items.length ? <ProductList items={items} edit={setEditing} adjust={setAdjusting} history={setHistory} print={setLabel} archive={archive} restore={restore} /> : <section className="card rounded-xl"><EmptyState title="No matching products" message="Try changing the search or filters, or add a new product." action={<Button onClick={() => setEditing(null)}>Add product</Button>} /></section>}
+    {items.length ? <><ProductList items={pagedItems} edit={setEditing} adjust={setAdjusting} history={setHistory} print={setLabel} archive={archive} restore={restore} /><section className="card mt-[-1px] rounded-b-xl"><Pagination data={{ page: currentPage, pageSize: 10, total: items.length, totalPages }} onPage={setPage} /></section></> : <section className="card rounded-xl"><EmptyState title="No matching products" message="Try changing the search or filters, or add a new product." action={<Button onClick={() => setEditing(null)}>Add product</Button>} /></section>}
     <ProductModal value={editing} open={editing !== undefined} close={() => setEditing(undefined)} save={save} />
     <AdjustmentModal item={adjusting} close={() => setAdjusting(null)} mutation={adjust} />
     <MovementModal item={history} close={() => setHistory(null)} />

@@ -63,6 +63,11 @@ export class ProductService {
       }
     }
   }
+  async catalog(auth) {
+    const context = await this.context(auth)
+    const rows = await this.productRepository.catalog(context.shop.id, auth.token)
+    return { items: rows.map((row) => { const quantity = Number(Array.isArray(row.inventory) ? row.inventory[0]?.quantity : row.inventory?.quantity) || 0; return { id: row.id, name: row.name, sku: row.sku, barcode: row.barcode, category: row.category, unit: row.unit, sellingPrice: row.selling_price, quantity, isLowStock: quantity <= Number(row.low_stock_threshold) } }) }
+  }
 
   async get(auth, productId) {
     const context = await this.context(auth)

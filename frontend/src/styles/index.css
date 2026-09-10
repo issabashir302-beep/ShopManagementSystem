@@ -47,13 +47,42 @@
   .safe-top { padding-top: env(safe-area-inset-top); }
 }
 
+.pos-layout > section { height: 100%; overflow-y: auto; }
+@media (min-width: 1024px) { .pos-cart > div { min-height: 0; } }
+
+.shopwise-loader {
+  --r1: 154%;
+  --r2: 68.5%;
+  width: 52px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(var(--r1) var(--r2) at top, transparent 79.5%, var(--color-brand-500) 80%),
+    radial-gradient(var(--r1) var(--r2) at bottom, var(--color-brand-500) 79.5%, transparent 80%),
+    radial-gradient(var(--r1) var(--r2) at top, transparent 79.5%, var(--color-brand-500) 80%),
+    var(--color-brand-100);
+  background-size: 50.5% 220%;
+  background-position: -100% 0%, 0% 0%, 100% 0%;
+  background-repeat: no-repeat;
+  box-shadow: 0 8px 24px rgba(20, 92, 73, .12);
+  animation: shopwise-loader-flow 1.6s infinite linear;
+}
+
+@keyframes shopwise-loader-flow {
+  33% { background-position: 0% 33%, 100% 33%, 200% 33%; }
+  66% { background-position: -100% 66%, 0% 66%, 100% 66%; }
+  100% { background-position: 0% 100%, 100% 100%, 200% 100%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  .shopwise-loader { animation: none !important; background-position: 0% 50%, 100% 50%, 200% 50%; }
 }
 
 @media print {
   body * { visibility: hidden !important; }
-  .barcode-print-area, .barcode-print-area * { visibility: visible !important; }
+  .barcode-print-area, .barcode-print-area *, .receipt-print-area, .receipt-print-area * { visibility: visible !important; }
   .barcode-print-area { position: absolute; inset: 0 auto auto 0; width: 58mm !important; border: 0 !important; padding: 3mm !important; }
+  .receipt-print-area { position: absolute !important; inset: 0 auto auto 0 !important; width: 80mm !important; color: #000 !important; background: #fff !important; border: 0 !important; padding: 4mm !important; box-shadow: none !important; }
   @page { size: auto; margin: 0; }
 }
