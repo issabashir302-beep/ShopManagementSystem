@@ -51,11 +51,35 @@
 @media (min-width: 1024px) { .pos-cart > div { min-height: 0; } }
 
 .shopwise-loader {
-  --r1: 154%;
-  --r2: 68.5%;
+  position: relative;
+  display: grid;
+  place-items: center;
   width: 52px;
   aspect-ratio: 1;
   border-radius: 50%;
+  overflow: hidden;
+  color: var(--color-brand-900);
+  background: var(--color-brand-100);
+  border: 1px solid color-mix(in srgb, var(--color-brand-500) 22%, transparent);
+  box-shadow: 0 8px 24px rgba(20, 92, 73, .12);
+}
+
+.shopwise-loader-fill {
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--loader-progress, 8%);
+  overflow: hidden;
+  transition: height 300ms ease-out;
+}
+
+.shopwise-loader-motion {
+  --r1: 154%;
+  --r2: 68.5%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 52px;
+  height: 52px;
   background:
     radial-gradient(var(--r1) var(--r2) at top, transparent 79.5%, var(--color-brand-500) 80%),
     radial-gradient(var(--r1) var(--r2) at bottom, var(--color-brand-500) 79.5%, transparent 80%),
@@ -64,8 +88,15 @@
   background-size: 50.5% 220%;
   background-position: -100% 0%, 0% 0%, 100% 0%;
   background-repeat: no-repeat;
-  box-shadow: 0 8px 24px rgba(20, 92, 73, .12);
   animation: shopwise-loader-flow 1.6s infinite linear;
+}
+
+.shopwise-loader strong {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 @keyframes shopwise-loader-flow {
@@ -76,7 +107,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
-  .shopwise-loader { animation: none !important; background-position: 0% 50%, 100% 50%, 200% 50%; }
+  .shopwise-loader-motion { animation: none !important; background-position: 0% 50%, 100% 50%, 200% 50%; }
+  .shopwise-loader-fill { transition: none; }
 }
 
 @media print {
