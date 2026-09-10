@@ -5,6 +5,7 @@ import { useAuth } from '../../features/auth/AuthContext'
 import { shopwiseApi } from '../../services/shopwiseApi'
 import { OfflineSyncStatus } from '../../features/offline/OfflineSync'
 import { cachedRequest } from '../../features/offline/offlineStore'
+import { BrandMark } from '../branding/BrandMark'
 
 const navClass = ({ isActive }) => `flex min-h-11 items-center gap-2 rounded-lg px-2.5 text-sm font-semibold sm:px-3 ${isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50'}`
 
@@ -15,9 +16,9 @@ export function PosShell() {
 
   return <div className="min-h-screen min-h-[100dvh] bg-[#f5f7f5] pt-16">
     <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b bg-white/95 px-2 backdrop-blur sm:px-6">
-      <NavLink to="/pos" className="flex min-h-11 shrink-0 items-center gap-2 px-1 font-extrabold" aria-label="Shopwise POS home">
-        <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-white">S</span>
-        <span className="hidden md:inline">Shopwise</span>
+      <NavLink to="/pos" className="flex min-h-11 shrink-0 items-center gap-2 px-1 font-extrabold" aria-label="Dukani POS home">
+        <BrandMark className="size-8" />
+        <span className="hidden md:inline">Dukani</span>
       </NavLink>
       <nav className="flex min-w-0 items-center gap-0.5 sm:gap-1" aria-label="POS navigation">
         <OfflineSyncStatus />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { ChartNoAxesCombined, CreditCard, Grid2X2, LogOut, Menu, PackageSearch, ReceiptText, Settings, ShoppingCart, UserRound, UsersRound, WalletCards, X } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
+import { BrandMark } from '../branding/BrandMark'
 const links = [['/app', 'Overview', Grid2X2, true], ['/app/products', 'Products & Stock', PackageSearch], ['/app/sales', 'Sales', ReceiptText], ['/app/shopkeepers', 'Shopkeepers', UsersRound], ['/app/payments', 'Payments', CreditCard], ['/app/expenses', 'Expenses', WalletCards], ['/app/reports', 'Reports', ChartNoAxesCombined], ['/app/settings', 'Settings', Settings], ['/app/profile', 'Profile', UserRound]]
 
 export function OwnerShell() {
@@ -9,7 +10,7 @@ export function OwnerShell() {
   return <div className="min-h-screen min-h-[100dvh] bg-[#f6f7f5]">
     {open && <button className="fixed inset-0 z-30 bg-black/35 lg:hidden" onClick={() => setOpen(false)} aria-label="Close navigation" />}
     <aside className={`fixed inset-y-0 left-0 z-40 flex w-[min(18rem,86vw)] flex-col border-r border-emerald-100 bg-[#f1f5f1] shadow-[4px_0_18px_rgba(22,101,52,0.04)] transition-transform lg:w-56 lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="flex h-16 items-center justify-between border-b px-5"><NavLink to="/app" className="flex items-center gap-2 font-extrabold"><span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-white">S</span>Shopwise</NavLink><button className="lg:hidden" onClick={() => setOpen(false)}><X size={19} /></button></div>
+      <div className="flex h-16 items-center justify-between border-b px-5"><NavLink to="/app" className="flex items-center gap-2 font-extrabold"><BrandMark className="size-8" />Dukani</NavLink><button className="lg:hidden" onClick={() => setOpen(false)}><X size={19} /></button></div>
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">{links.map(([to, label, Icon, end]) => <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)} className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold ${isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}><Icon size={18} />{label}</NavLink>)}</nav>
       <div className="border-t p-3"><div className="mb-2 px-3"><strong className="block truncate text-sm">{auth.profile?.fullName}</strong><span className="block truncate text-xs text-gray-500">{auth.profile?.email}</span></div><button onClick={auth.logout} className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"><LogOut size={18} />Sign out</button></div>
     </aside>

@@ -15,7 +15,7 @@ export function ProtectedRoute({ role }) {
   const location = useLocation()
 
   if (auth.isLoading) {
-    return <div className="grid min-h-screen place-items-center text-sm text-gray-500">Opening Shopwise...</div>
+    return <div className="grid min-h-screen place-items-center text-sm text-gray-500">Opening Dukani...</div>
   }
   if (!auth.isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />
   if (role && auth.role !== role) return <Navigate to={workspaceForRole(auth.role)} replace />

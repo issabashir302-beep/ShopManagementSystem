@@ -28,7 +28,7 @@ export function BarcodeLabelModal({ product, close }) {
   return <Modal open={Boolean(product)} onClose={close} title="Print barcode label" footer={<><Button variant="secondary" onClick={close}>Close</Button><Button onClick={() => window.print()}><Printer size={16} />Print label</Button></>}>
     <div className="barcode-print-area mx-auto w-full max-w-sm rounded-xl border bg-white p-5 text-center">
       <strong className="block truncate text-lg">{product?.name}</strong>
-      <span className="mt-1 block text-sm text-gray-500">{product?.sku || product?.category || 'Shopwise product'}</span>
+      <span className="mt-1 block text-sm text-gray-500">{product?.sku || product?.category || 'Dukani product'}</span>
       {product?.barcode && <div className="mt-3"><BarcodeGraphic value={product.barcode} /></div>}
       <strong className="mt-2 block text-xl">{money(product?.sellingPrice)}</strong>
     </div>

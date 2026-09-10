@@ -1,6 +1,6 @@
 {
-  "name": "Shopwise MiniPOS",
-  "short_name": "Shopwise",
+  "name": "Dukani MiniPOS",
+  "short_name": "Dukani",
   "description": "Practical point of sale and shop management",
   "start_url": "/pos",
   "display": "standalone",
