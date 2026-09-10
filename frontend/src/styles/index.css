@@ -50,6 +50,47 @@
 .pos-layout > section { height: 100%; overflow-y: auto; }
 @media (min-width: 1024px) { .pos-cart > div { min-height: 0; } }
 
+html.dark { color-scheme: dark; background: #0d1411; }
+html.dark body { background: #0d1411; color: #e8efeb; }
+html.dark .card { border-color: #2a3831; background: #17201c; box-shadow: 0 1px 2px rgba(0, 0, 0, .24); }
+html.dark .control { border-color: #34433b; background: #111a16; color: #e8efeb; }
+html.dark .control::placeholder { color: #718078; }
+html.dark .control:disabled { background: #202a25; color: #8c9992; }
+html.dark .label { color: #d6e0da; }
+html.dark .data-table th { border-color: #2a3831; background: #111a16; color: #a5b1aa; }
+html.dark .data-table td { border-color: #2a3831; }
+html.dark [class~="bg-white"],
+html.dark [class~="bg-white/95"] { background-color: rgba(23, 32, 28, .96) !important; }
+html.dark [class~="bg-[#f6f7f5]"],
+html.dark [class~="bg-[#f5f7f5]"],
+html.dark [class~="bg-[#f7f8f6]"] { background-color: #0d1411 !important; }
+html.dark [class~="bg-[#f1f5f1]"],
+html.dark [class~="bg-gray-50"],
+html.dark [class~="bg-gray-100"],
+html.dark [class~="bg-[#fafbfa]"] { background-color: #202a25 !important; }
+html.dark [class~="text-gray-950"],
+html.dark [class~="text-gray-900"] { color: #f3f7f5 !important; }
+html.dark [class~="text-gray-700"],
+html.dark [class~="text-gray-600"] { color: #c3cec8 !important; }
+html.dark [class~="text-gray-500"],
+html.dark [class~="text-gray-400"] { color: #96a49c !important; }
+html.dark [class~="border-gray-100"],
+html.dark [class~="border-gray-200"],
+html.dark [class~="border-emerald-100"] { border-color: #2a3831 !important; }
+html.dark [class~="divide-gray-100"] > :not([hidden]) ~ :not([hidden]),
+html.dark [class~="divide-gray-200"] > :not([hidden]) ~ :not([hidden]),
+html.dark [class~="divide-y"] > :not([hidden]) ~ :not([hidden]) { border-color: #2a3831; }
+html.dark [class~="hover:bg-gray-50"]:hover,
+html.dark [class~="hover:bg-gray-100"]:hover { background-color: #26332d !important; }
+html.dark [class~="bg-brand-50"] { background-color: #19372e !important; }
+html.dark [class~="text-brand-700"] { color: #6fd0aa !important; }
+html.dark [class~="bg-emerald-50"],
+html.dark [class~="bg-emerald-50/70"] { background-color: rgba(6, 78, 59, .32) !important; }
+html.dark [class~="bg-red-50"],
+html.dark [class~="bg-red-50/60"] { background-color: rgba(127, 29, 29, .28) !important; }
+html.dark [class~="bg-amber-50"] { background-color: rgba(120, 53, 15, .28) !important; }
+html.dark [class~="focus-visible:ring-offset-2"] { --tw-ring-offset-color: #0d1411; }
+
 .shopwise-loader {
   position: relative;
   display: grid;

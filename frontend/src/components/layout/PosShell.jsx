@@ -6,6 +6,7 @@ import { shopwiseApi } from '../../services/shopwiseApi'
 import { OfflineSyncStatus } from '../../features/offline/OfflineSync'
 import { cachedRequest } from '../../features/offline/offlineStore'
 import { BrandMark } from '../branding/BrandMark'
+import { HeyDukaAnnouncement } from '../../features/assistant/HeyDukaAnnouncement'
 
 const navClass = ({ isActive }) => `flex min-h-11 items-center gap-2 rounded-lg px-2.5 text-sm font-semibold sm:px-3 ${isActive ? 'bg-brand-50 text-brand-700' : 'text-gray-600 hover:bg-gray-50'}`
 
@@ -30,5 +31,6 @@ export function PosShell() {
       </nav>
     </header>
     <Outlet />
+    <HeyDukaAnnouncement />
   </div>
 }

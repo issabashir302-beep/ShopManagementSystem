@@ -1,5 +1,5 @@
 import { useQueries } from '@tanstack/react-query'
-import { AlertTriangle, Banknote, Boxes, ReceiptText, Smartphone } from 'lucide-react'
+import { Banknote, Boxes, Package, ReceiptText, Smartphone } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { shopwiseApi } from '../../services/shopwiseApi'
 import { money, dateTime } from '../../utils/format'
@@ -8,21 +8,22 @@ import { PageLoading, ErrorState, EmptyState } from '../../components/feedback/S
 import { Badge } from '../../components/ui/Badge'
 
 export function DashboardPage() {
-  const [daily, low, sales, paymentMethods] = useQueries({ queries: [
+  const [daily, inventoryReport, low, sales, paymentMethods] = useQueries({ queries: [
     { queryKey: ['reports', 'daily'], queryFn: () => shopwiseApi.reports.daily() },
+    { queryKey: ['reports', 'inventory'], queryFn: () => shopwiseApi.reports.inventory() },
     { queryKey: ['inventory', 'low', 1], queryFn: () => shopwiseApi.inventory.low({ pageSize: 5 }) },
     { queryKey: ['sales', { limit: 5 }], queryFn: () => shopwiseApi.sales.list({ limit: 5 }) },
     { queryKey: ['payment-methods'], queryFn: shopwiseApi.mpesa.availability },
   ] })
-  if ([daily, low, sales, paymentMethods].some((query) => query.isLoading)) return <PageLoading />
-  const error = [daily, low, sales, paymentMethods].find((query) => query.error)?.error
+  if ([daily, inventoryReport, low, sales, paymentMethods].some((query) => query.isLoading)) return <PageLoading />
+  const error = [daily, inventoryReport, low, sales, paymentMethods].find((query) => query.error)?.error
   if (error) return <ErrorState error={error} />
 
   const totals = daily.data.totals || {}
   const cards = [
-    ['Transactions', totals.transactions ?? totals.salesCount ?? 0, ReceiptText],
-    ['Net operating profit', money(totals.netOperatingProfit ?? totals.grossProfit), Boxes],
-    ['Low stock', low.data.pagination.total, AlertTriangle],
+    ['Transactions', totals.transactions ?? totals.salesCount ?? 0, ReceiptText, 'Completed sales today'],
+    ['Net operating profit', money(totals.netOperatingProfit ?? totals.grossProfit), Boxes, 'After stock cost and expenses'],
+    ['Inventory value', money(inventoryReport.data.inventory?.costValue), Package, `${inventoryReport.data.inventory?.products || 0} ${Number(inventoryReport.data.inventory?.products) === 1 ? 'product' : 'products'}`],
   ]
 
   return <>
@@ -36,9 +37,10 @@ export function DashboardPage() {
           <div className="min-w-0 pl-3"><span className="block text-xs font-semibold text-red-700">Amount out</span><strong className="mt-1 block break-words text-xl sm:text-2xl">{money(totals.operatingExpenses)}</strong><small className="mt-1 block text-gray-500">Operating expenses</small></div>
         </div>
       </article>
-      {cards.map(([label, value, Icon]) => <article className="card min-w-0 rounded-xl p-4 sm:p-5" key={label}>
+      {cards.map(([label, value, Icon, supportingText]) => <article className="card min-w-0 rounded-xl p-4 sm:p-5" key={label}>
         <div className="flex justify-between gap-3"><span className="text-sm text-gray-500">{label}</span><Icon size={18} className="shrink-0 text-brand-600" /></div>
         <strong className="mt-4 block break-words text-2xl sm:mt-5">{value}</strong>
+        {supportingText && <small className="mt-1.5 block font-medium text-gray-500">{supportingText}</small>}
       </article>)}
     </div>
     <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-2 xl:mt-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(280px,.7fr)] xl:gap-5">

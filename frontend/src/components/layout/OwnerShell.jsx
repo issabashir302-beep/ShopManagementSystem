@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { ChartNoAxesCombined, CreditCard, Grid2X2, LogOut, Menu, PackageSearch, ReceiptText, Settings, ShoppingCart, UserRound, UsersRound, WalletCards, X } from 'lucide-react'
 import { useAuth } from '../../features/auth/AuthContext'
 import { BrandMark } from '../branding/BrandMark'
+import { HeyDukaAnnouncement } from '../../features/assistant/HeyDukaAnnouncement'
 const links = [['/app', 'Overview', Grid2X2, true], ['/app/products', 'Products & Stock', PackageSearch], ['/app/sales', 'Sales', ReceiptText], ['/app/shopkeepers', 'Shopkeepers', UsersRound], ['/app/payments', 'Payments', CreditCard], ['/app/expenses', 'Expenses', WalletCards], ['/app/reports', 'Reports', ChartNoAxesCombined], ['/app/settings', 'Settings', Settings], ['/app/profile', 'Profile', UserRound]]
 
 export function OwnerShell() {
@@ -15,5 +16,6 @@ export function OwnerShell() {
       <div className="border-t p-3"><div className="mb-2 px-3"><strong className="block truncate text-sm">{auth.profile?.fullName}</strong><span className="block truncate text-xs text-gray-500">{auth.profile?.email}</span></div><button onClick={auth.logout} className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"><LogOut size={18} />Sign out</button></div>
     </aside>
     <div className="min-w-0 pt-16 lg:ml-56"><header className="fixed inset-x-0 top-0 z-20 flex h-16 items-center justify-between border-b bg-white/95 px-4 backdrop-blur lg:left-56 lg:px-7"><button className="grid size-11 place-items-center rounded-lg lg:hidden" onClick={() => setOpen(true)} aria-label="Open navigation"><Menu /></button><span className="hidden text-sm text-gray-500 sm:block">Owner workspace</span><NavLink to="/pos" className="inline-flex min-h-10 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold text-brand-700 hover:bg-brand-50"><ShoppingCart size={16} /><span className="hidden min-[360px]:inline">Open </span>POS</NavLink></header><main className="mx-auto w-full max-w-[1440px] p-3 min-[380px]:p-4 sm:p-6 lg:p-8"><Outlet /></main></div>
+    <HeyDukaAnnouncement />
   </div>
 }
